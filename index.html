@@ -1,0 +1,2830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Luna — Understand your cycle.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   CSS VARIABLES & RESET
+============================================================ */
+:root {
+  --bg:           #F8F3ED;
+  --bg-card:      #FFFCF9;
+  --primary:      #D8A7B1;
+  --primary-light:#F2D9DF;
+  --primary-dark: #C0899A;
+  --secondary:    #C8B6E2;
+  --secondary-light:#EDE6F6;
+  --accent:       #C8A96B;
+  --accent-light: #F3E9D2;
+  --text:         #3A3A3A;
+  --text-muted:   #8A8A8A;
+  --text-light:   #B8B8B8;
+  --white:        #FFFFFF;
+  --shadow:       0 8px 24px rgba(0,0,0,0.08);
+  --shadow-sm:    0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg:    0 16px 40px rgba(0,0,0,0.12);
+  --radius:       18px;
+  --radius-sm:    12px;
+  --radius-pill:  100px;
+  --nav-height:   72px;
+  --max-w:        480px;
+
+  /* Phase colours */
+  --phase-menstrual: #D8A7B1;
+  --phase-follicular: #C8B6E2;
+  --phase-ovulation: #C8A96B;
+  --phase-luteal: linear-gradient(135deg, #D8A7B1, #C8B6E2);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .serif {
+  font-family: 'Playfair Display', serif;
+}
+
+/* ============================================================
+   APP SHELL
+============================================================ */
+#app {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+  box-shadow: 0 0 60px rgba(0,0,0,0.08);
+}
+
+/* ============================================================
+   SCREENS
+============================================================ */
+.screen {
+  display: none;
+  position: absolute;
+  inset: 0;
+  padding-bottom: var(--nav-height);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.32s ease, transform 0.32s ease;
+}
+
+.screen.active {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.screen-inner {
+  padding: 24px 20px 32px;
+  min-height: calc(100vh - var(--nav-height));
+}
+
+/* Splash has no nav */
+#screen-splash {
+  padding-bottom: 0;
+  display: none;
+}
+
+#screen-splash.active {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================
+   BOTTOM NAVIGATION
+============================================================ */
+#bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--max-w);
+  height: var(--nav-height);
+  background: rgba(255, 252, 249, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(216, 167, 177, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.nav-item:active {
+  transform: scale(0.92);
+}
+
+.nav-icon {
+  font-size: 22px;
+  transition: transform 0.2s ease;
+  line-height: 1;
+}
+
+.nav-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-light);
+  letter-spacing: 0.3px;
+  transition: color 0.2s ease;
+}
+
+.nav-item.active .nav-label {
+  color: var(--primary-dark);
+  font-weight: 600;
+}
+
+.nav-item.active .nav-icon {
+  transform: scale(1.15);
+}
+
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+/* ============================================================
+   CARDS
+============================================================ */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:active {
+  transform: scale(0.99);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.card-accent {
+  border-left: 3px solid var(--accent);
+  padding-left: 16px;
+}
+
+.card-gradient {
+  background: linear-gradient(135deg, #FFFCF9 0%, #F8F0F5 100%);
+}
+
+/* ============================================================
+   BUTTONS
+============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-pill);
+  padding: 14px 28px;
+  min-height: 48px;
+  transition: all 0.2s ease;
+  letter-spacing: 0.2px;
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: var(--white);
+  box-shadow: 0 6px 20px rgba(216, 167, 177, 0.4);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 8px 24px rgba(216, 167, 177, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--secondary-light);
+  color: var(--text);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  padding: 10px 16px;
+}
+
+.btn-danger {
+  background: #FBE8E8;
+  color: #C05050;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn-sm {
+  font-size: 13px;
+  padding: 10px 20px;
+  min-height: 40px;
+}
+
+/* ============================================================
+   SECTION HEADERS
+============================================================ */
+.section-header {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.section-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ============================================================
+   SPLASH SCREEN
+============================================================ */
+#screen-splash {
+  background: linear-gradient(160deg, #F8F3ED 0%, #F2E5EC 50%, #EDE6F6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.splash-inner {
+  text-align: center;
+  padding: 40px 32px;
+  animation: splashFadeIn 1s ease forwards;
+}
+
+@keyframes splashFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.splash-moon {
+  font-size: 72px;
+  margin-bottom: 20px;
+  display: block;
+  animation: moonGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes moonGlow {
+  from { filter: drop-shadow(0 0 8px rgba(216,167,177,0.3)); }
+  to   { filter: drop-shadow(0 0 24px rgba(216,167,177,0.7)); }
+}
+
+.splash-title {
+  font-size: 56px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -1px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.splash-tagline {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 16px;
+  color: var(--text-muted);
+  margin-bottom: 48px;
+  line-height: 1.6;
+}
+
+.splash-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.splash-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  opacity: 0.4;
+}
+
+.splash-dot:nth-child(2) { background: var(--secondary); }
+.splash-dot:nth-child(3) { background: var(--accent); }
+
+/* ============================================================
+   ONBOARDING MODAL
+============================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(58, 58, 58, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal-sheet {
+  background: var(--bg-card);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 28px 24px 40px;
+  width: 100%;
+  max-width: var(--max-w);
+  margin: 0 auto;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-overlay.visible .modal-sheet {
+  transform: translateY(0);
+}
+
+.modal-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--text-light);
+  border-radius: 2px;
+  margin: 0 auto 24px;
+}
+
+.modal-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.modal-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+}
+
+/* Onboarding steps */
+.onboarding-step {
+  display: none;
+}
+.onboarding-step.active {
+  display: block;
+  animation: fadeSlideIn 0.3s ease;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.step-indicator {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 28px;
+}
+
+.step-dot {
+  height: 4px;
+  border-radius: 2px;
+  flex: 1;
+  background: var(--primary-light);
+  transition: background 0.3s ease;
+}
+
+.step-dot.done {
+  background: var(--primary);
+}
+
+/* ============================================================
+   FORM ELEMENTS
+============================================================ */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px solid rgba(216, 167, 177, 0.25);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+  transition: all 0.2s ease;
+  min-height: 48px;
+}
+
+.form-input:focus {
+  border-color: var(--primary);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(216, 167, 177, 0.12);
+}
+
+.form-input::placeholder {
+  color: var(--text-light);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.number-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--bg);
+  border: 1.5px solid rgba(216, 167, 177, 0.25);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.stepper-btn {
+  width: 44px;
+  height: 48px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--primary-dark);
+  font-weight: 500;
+  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepper-btn:active {
+  background: var(--primary-light);
+}
+
+.stepper-value {
+  flex: 1;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+textarea.form-input {
+  resize: none;
+  min-height: 88px;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   HOME SCREEN
+============================================================ */
+.greeting-time {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.greeting-name {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.greeting-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Progress Ring Card */
+.ring-card {
+  background: linear-gradient(145deg, #FFFCF9, #F8F0F5);
+  text-align: center;
+  padding: 28px 20px;
+}
+
+.ring-wrapper {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 16px;
+}
+
+.ring-svg {
+  width: 160px;
+  height: 160px;
+  transform: rotate(-90deg);
+}
+
+.ring-bg {
+  fill: none;
+  stroke: var(--primary-light);
+  stroke-width: 10;
+}
+
+.ring-progress {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+              stroke 0.5s ease;
+}
+
+.ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-day {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
+}
+
+.ring-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 3px;
+  letter-spacing: 0.3px;
+}
+
+.phase-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.phase-menstrual  { background: var(--primary-light); color: var(--primary-dark); }
+.phase-follicular { background: var(--secondary-light); color: #7A5FA0; }
+.phase-ovulation  { background: var(--accent-light); color: #8A6A1A; }
+.phase-luteal     { background: linear-gradient(135deg, var(--primary-light), var(--secondary-light)); color: var(--primary-dark); }
+
+.next-period-text {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.next-period-text strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Wellness Insight card */
+.insight-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+/* Affirmation card */
+.affirmation-card {
+  background: linear-gradient(135deg, #F8EEFB 0%, #EDE6F6 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.affirmation-card::before {
+  content: '❝';
+  position: absolute;
+  top: 12px;
+  right: 20px;
+  font-size: 48px;
+  color: rgba(200, 182, 226, 0.3);
+  line-height: 1;
+  font-family: serif;
+}
+
+.affirmation-text {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.affirmation-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+/* Cycle wisdom card */
+.wisdom-card {
+  background: linear-gradient(135deg, #F3E9D2 0%, #F8F3ED 100%);
+  border-left: 3px solid var(--accent);
+}
+
+/* ============================================================
+   CALENDAR SCREEN
+============================================================ */
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.cal-month-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.cal-nav-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+
+.cal-nav-btn:active {
+  transform: scale(0.92);
+  background: var(--primary-light);
+}
+
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.cal-weekday {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 0;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+  min-height: 40px;
+  color: var(--text);
+}
+
+.cal-day:active {
+  transform: scale(0.88);
+}
+
+.cal-day.empty {
+  cursor: default;
+}
+
+.cal-day.today {
+  box-shadow: 0 0 0 2px var(--text);
+  font-weight: 700;
+}
+
+.cal-day.period {
+  background: var(--primary);
+  color: white;
+}
+
+.cal-day.fertile {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.cal-day.ovulation {
+  background: var(--accent);
+  color: white;
+}
+
+.cal-day.ovulation::after {
+  content: '⭐';
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  font-size: 8px;
+}
+
+.cal-day.other-month {
+  opacity: 0.3;
+}
+
+.cal-day.predicted-period {
+  background: rgba(216, 167, 177, 0.25);
+  color: var(--primary-dark);
+  border: 1px dashed var(--primary);
+}
+
+.cal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* ============================================================
+   TRACKER SCREEN
+============================================================ */
+.tracker-section {
+  margin-bottom: 24px;
+}
+
+.tracker-section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Symptom pills */
+.pill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  padding: 9px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1.5px solid rgba(216, 167, 177, 0.35);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+}
+
+.pill:active {
+  transform: scale(0.95);
+}
+
+.pill.selected {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(216, 167, 177, 0.4);
+}
+
+/* Mood selector */
+.mood-grid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mood-btn {
+  flex: 1;
+  min-width: 60px;
+  padding: 10px 6px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid rgba(216, 167, 177, 0.2);
+  background: var(--bg-card);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.mood-btn:active {
+  transform: scale(0.93);
+}
+
+.mood-btn .mood-emoji {
+  display: block;
+  font-size: 26px;
+  margin-bottom: 4px;
+  line-height: 1;
+}
+
+.mood-btn.selected {
+  background: var(--secondary-light);
+  border-color: var(--secondary);
+  color: var(--text);
+  box-shadow: 0 4px 12px rgba(200, 182, 226, 0.3);
+}
+
+/* Wellness log */
+.wellness-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.wellness-card-inner {
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  border: 1px solid rgba(216, 167, 177, 0.12);
+}
+
+.wellness-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.water-glasses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.glass-btn {
+  font-size: 18px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  filter: grayscale(1) opacity(0.35);
+  background: none;
+  border: none;
+  padding: 2px;
+  min-width: 26px;
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.glass-btn.filled {
+  filter: none;
+}
+
+.glass-btn:active {
+  transform: scale(0.85);
+}
+
+.water-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.water-progress {
+  height: 4px;
+  background: var(--primary-light);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.water-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  border-radius: 2px;
+  transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sleep-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.sleep-unit {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.sleep-quality {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 6px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  display: inline-block;
+}
+
+.sleep-quality.restful { background: #E8F5E9; color: #4CAF50; }
+.sleep-quality.fair    { background: var(--accent-light); color: #8A6A1A; }
+.sleep-quality.low     { background: #FBE8E8; color: #C05050; }
+
+.sleep-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* ============================================================
+   INSIGHTS SCREEN
+============================================================ */
+.insight-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.insight-stat-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  padding: 18px 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.insight-stat-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.insight-stat-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.insight-stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.insight-full-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 10px;
+}
+
+.insight-icon-circle {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 50%;
+  background: var(--accent-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.insight-text-block .insight-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+
+.insight-text-block .insight-card-detail {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 24px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.empty-state-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.empty-state-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+/* History section */
+.history-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 10px;
+  transition: background 0.2s ease;
+}
+
+.history-toggle:active {
+  background: var(--primary-light);
+}
+
+.history-toggle-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.history-chevron {
+  font-size: 12px;
+  color: var(--text-muted);
+  transition: transform 0.3s ease;
+}
+
+.history-chevron.open {
+  transform: rotate(180deg);
+}
+
+.history-body {
+  display: none;
+  background: var(--bg-card);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  padding: 0 20px 16px;
+  margin-top: -8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.history-body.open {
+  display: block;
+}
+
+.history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(216, 167, 177, 0.1);
+  font-size: 13px;
+}
+
+.history-row:last-child {
+  border-bottom: none;
+}
+
+.history-cycle-num {
+  font-weight: 700;
+  color: var(--primary-dark);
+  min-width: 24px;
+}
+
+/* ============================================================
+   PROFILE SCREEN
+============================================================ */
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-light), var(--secondary-light));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin: 0 auto 20px;
+  box-shadow: var(--shadow);
+}
+
+.profile-privacy {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 24px;
+  padding: 12px;
+  background: rgba(216, 167, 177, 0.08);
+  border-radius: var(--radius-sm);
+  line-height: 1.6;
+}
+
+/* ============================================================
+   CALENDAR BOTTOM SHEET
+============================================================ */
+.cal-sheet-date {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.cal-sheet-info {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.cal-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid rgba(216, 167, 177, 0.2);
+  background: var(--bg);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 10px;
+  transition: all 0.2s ease;
+  min-height: 52px;
+}
+
+.cal-action-btn:active {
+  transform: scale(0.98);
+  background: var(--primary-light);
+}
+
+.cal-action-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  background: var(--primary-light);
+}
+
+/* Confirmation modal */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(58, 58, 58, 0.5);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.confirm-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.confirm-box {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 340px;
+  box-shadow: var(--shadow-lg);
+  transform: scale(0.92);
+  transition: transform 0.25s ease;
+  text-align: center;
+}
+
+.confirm-overlay.visible .confirm-box {
+  transform: scale(1);
+}
+
+.confirm-icon {
+  font-size: 40px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.confirm-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.confirm-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-80px);
+  background: var(--text);
+  color: white;
+  padding: 12px 20px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 400;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-width: 280px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ============================================================
+   PERIOD LOGGING VIA CALENDAR
+============================================================ */
+.mark-period-start { background: var(--primary-light) !important; }
+
+/* ============================================================
+   SAVE BAR
+============================================================ */
+.save-bar {
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(to top, var(--bg) 60%, transparent);
+  padding: 16px 0 8px;
+  margin-top: 8px;
+}
+
+/* ============================================================
+   UTILITIES
+============================================================ */
+.text-center { text-align: center; }
+.text-muted  { color: var(--text-muted); }
+.mt-4  { margin-top: 4px; }
+.mt-8  { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mb-8  { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+.flex  { display: flex; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.gap-8 { gap: 8px; }
+
+.divider {
+  height: 1px;
+  background: rgba(216, 167, 177, 0.15);
+  margin: 20px 0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 0; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===== SPLASH SCREEN ===== -->
+  <div id="screen-splash" class="screen active">
+    <div class="splash-inner">
+      <span class="splash-moon">🌙</span>
+      <h1 class="splash-title serif">Luna</h1>
+      <p class="splash-tagline">Understand your cycle.<br>Connect with your body.</p>
+      <div class="splash-dots">
+        <div class="splash-dot"></div>
+        <div class="splash-dot"></div>
+        <div class="splash-dot"></div>
+      </div>
+      <button class="btn btn-primary" onclick="beginJourney()" style="font-size:16px;padding:16px 40px;">
+        Begin Your Journey
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== HOME SCREEN ===== -->
+  <div id="screen-home" class="screen">
+    <div class="screen-inner">
+      <!-- Greeting -->
+      <div class="section-header" style="margin-bottom:24px;">
+        <p class="greeting-time" id="greeting-time">Good Morning</p>
+        <h1 class="greeting-name serif" id="greeting-name">Welcome</h1>
+        <p class="greeting-sub" id="greeting-sub">Here's your cycle overview for today.</p>
+      </div>
+
+      <!-- Progress Ring Card -->
+      <div class="card ring-card">
+        <div class="ring-wrapper">
+          <svg class="ring-svg" viewBox="0 0 160 160">
+            <circle class="ring-bg" cx="80" cy="80" r="70"/>
+            <circle class="ring-progress" id="ring-progress" cx="80" cy="80" r="70"
+              stroke-dasharray="439.8"
+              stroke-dashoffset="439.8"
+              stroke="var(--primary)"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-day" id="ring-day">—</div>
+            <div class="ring-label" id="ring-label">of 28 days</div>
+          </div>
+        </div>
+        <div id="phase-badge-wrap" style="text-align:center;margin-bottom:8px;">
+          <span class="phase-badge phase-menstrual" id="phase-badge">🌸 Loading…</span>
+        </div>
+        <p class="next-period-text text-center" id="next-period-text">Calculating…</p>
+      </div>
+
+      <!-- Wellness Insight -->
+      <div class="card card-accent" id="wellness-insight-card">
+        <p class="affirmation-label">✨ Wellness Insight</p>
+        <div class="card-title" id="wellness-insight-title">Phase Insight</div>
+        <p class="insight-text" id="wellness-insight-text">Loading your personalised insight…</p>
+      </div>
+
+      <!-- Daily Affirmation -->
+      <div class="card affirmation-card">
+        <p class="affirmation-label">Today's Affirmation</p>
+        <p class="affirmation-text" id="daily-affirmation">"My body is wise and capable."</p>
+      </div>
+
+      <!-- Cycle Wisdom -->
+      <div class="card wisdom-card">
+        <p class="affirmation-label" style="color:var(--accent);">🌙 Cycle Wisdom</p>
+        <p class="insight-text" id="cycle-wisdom">Loading…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CALENDAR SCREEN ===== -->
+  <div id="screen-calendar" class="screen">
+    <div class="screen-inner">
+      <div class="section-header">
+        <h1 class="section-title">Calendar</h1>
+        <p class="section-subtitle">Tap a date to log or view your cycle</p>
+      </div>
+
+      <div class="card" style="padding:20px 16px;">
+        <!-- Month navigation -->
+        <div class="cal-header">
+          <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+          <span class="cal-month-title" id="cal-month-title">Month</span>
+          <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+        </div>
+
+        <!-- Weekday headers -->
+        <div class="cal-weekdays">
+          <div class="cal-weekday">Su</div>
+          <div class="cal-weekday">Mo</div>
+          <div class="cal-weekday">Tu</div>
+          <div class="cal-weekday">We</div>
+          <div class="cal-weekday">Th</div>
+          <div class="cal-weekday">Fr</div>
+          <div class="cal-weekday">Sa</div>
+        </div>
+
+        <!-- Calendar grid -->
+        <div class="cal-grid" id="cal-grid"></div>
+
+        <!-- Legend -->
+        <div class="cal-legend">
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--primary);"></div>
+            <span>Period</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--primary-light);border:1px dashed var(--primary);"></div>
+            <span>Predicted</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--accent);"></div>
+            <span>Ovulation</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--primary-light);"></div>
+            <span>Fertile</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:transparent;box-shadow:0 0 0 2px var(--text);"></div>
+            <span>Today</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TRACKER SCREEN ===== -->
+  <div id="screen-tracker" class="screen">
+    <div class="screen-inner">
+      <div class="section-header">
+        <h1 class="section-title">Daily Tracker</h1>
+        <p class="section-subtitle" id="tracker-date-label">Today</p>
+      </div>
+
+      <!-- Symptoms -->
+      <div class="card">
+        <div class="tracker-section-title">🫀 Symptoms</div>
+        <div class="pill-grid" id="symptom-pills"></div>
+      </div>
+
+      <!-- Mood -->
+      <div class="card">
+        <div class="tracker-section-title">🌈 Mood</div>
+        <div class="mood-grid" id="mood-grid"></div>
+        <div style="margin-top:16px;">
+          <label class="form-label" for="mood-notes">Notes (optional)</label>
+          <textarea class="form-input" id="mood-notes" placeholder="How are you feeling today?"></textarea>
+        </div>
+      </div>
+
+      <!-- Wellness log -->
+      <div class="card">
+        <div class="tracker-section-title">💎 Wellness Log</div>
+        <div class="wellness-row">
+          <!-- Water -->
+          <div class="wellness-card-inner">
+            <div class="wellness-title">💧 Water</div>
+            <div class="water-glasses" id="water-glasses"></div>
+            <div class="water-progress"><div class="water-fill" id="water-fill" style="width:0%"></div></div>
+            <div class="water-label mt-4" id="water-label">0 / 8 glasses</div>
+          </div>
+          <!-- Sleep -->
+          <div class="wellness-card-inner">
+            <div class="wellness-title">😴 Sleep</div>
+            <div class="sleep-value" id="sleep-value">7</div>
+            <div class="sleep-unit">hours</div>
+            <div class="sleep-stepper">
+              <button class="stepper-btn" onclick="changeSleep(-0.5)" style="font-size:18px;width:32px;height:32px;border-radius:50%;background:var(--bg);border:1px solid rgba(216,167,177,0.3);">−</button>
+              <button class="stepper-btn" onclick="changeSleep(0.5)"  style="font-size:18px;width:32px;height:32px;border-radius:50%;background:var(--bg);border:1px solid rgba(216,167,177,0.3);">+</button>
+            </div>
+            <div class="sleep-quality" id="sleep-quality-badge">Restful</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="save-bar">
+        <button class="btn btn-primary btn-full" onclick="saveTracker()">Save Today's Log ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== INSIGHTS SCREEN ===== -->
+  <div id="screen-insights" class="screen">
+    <div class="screen-inner">
+      <div class="section-header">
+        <h1 class="section-title">Insights</h1>
+        <p class="section-subtitle">Patterns from your cycle data</p>
+      </div>
+
+      <div id="insights-content"></div>
+
+      <!-- History section -->
+      <div id="history-section" style="margin-top:24px;"></div>
+    </div>
+  </div>
+
+  <!-- ===== PROFILE SCREEN ===== -->
+  <div id="screen-profile" class="screen">
+    <div class="screen-inner">
+      <div class="section-header">
+        <h1 class="section-title">Profile</h1>
+        <p class="section-subtitle">Your personal cycle settings</p>
+      </div>
+
+      <div class="card" style="text-align:center;padding:28px;">
+        <div class="profile-avatar">🌙</div>
+        <p style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Your Name</p>
+        <div class="serif" style="font-size:22px;font-weight:600;" id="profile-display-name">—</div>
+      </div>
+
+      <div class="card">
+        <div class="form-group">
+          <label class="form-label" for="profile-name">Name</label>
+          <input type="text" class="form-input" id="profile-name" placeholder="Your name">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="profile-cycle-len">Cycle Length</label>
+            <div class="number-stepper">
+              <button class="stepper-btn" onclick="adjustProfile('cycleLength',-1)">−</button>
+              <span class="stepper-value" id="profile-cycle-len">28</span>
+              <button class="stepper-btn" onclick="adjustProfile('cycleLength',1)">+</button>
+            </div>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:5px;">days</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="profile-period-len">Period Duration</label>
+            <div class="number-stepper">
+              <button class="stepper-btn" onclick="adjustProfile('periodLength',-1)">−</button>
+              <span class="stepper-value" id="profile-period-len">5</span>
+              <button class="stepper-btn" onclick="adjustProfile('periodLength',1)">+</button>
+            </div>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:5px;">days</p>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="saveProfile()" style="margin-top:8px;">Save Changes</button>
+      </div>
+
+      <button class="btn btn-danger btn-full" onclick="confirmReset()" style="margin-top:8px;">Reset All Data</button>
+
+      <div class="profile-privacy">
+        🔒 Luna stores all your data privately on your device.<br>
+        Nothing is ever sent to a server.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== BOTTOM NAVIGATION ===== -->
+  <nav id="bottom-nav">
+    <div class="nav-item active" onclick="navigate('home')" id="nav-home">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Home</span>
+    </div>
+    <div class="nav-item" onclick="navigate('calendar')" id="nav-calendar">
+      <span class="nav-icon">📅</span>
+      <span class="nav-label">Calendar</span>
+    </div>
+    <div class="nav-item" onclick="navigate('tracker')" id="nav-tracker">
+      <span class="nav-icon">💊</span>
+      <span class="nav-label">Track</span>
+    </div>
+    <div class="nav-item" onclick="navigate('insights')" id="nav-insights">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Insights</span>
+    </div>
+    <div class="nav-item" onclick="navigate('profile')" id="nav-profile">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">Profile</span>
+    </div>
+  </nav>
+
+</div><!-- end #app -->
+
+<!-- ===== ONBOARDING MODAL ===== -->
+<div id="onboarding-modal" class="modal-overlay">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+
+    <div class="step-indicator">
+      <div class="step-dot done" id="sdot-1"></div>
+      <div class="step-dot" id="sdot-2"></div>
+      <div class="step-dot" id="sdot-3"></div>
+      <div class="step-dot" id="sdot-4"></div>
+    </div>
+
+    <!-- Step 1: Name -->
+    <div class="onboarding-step active" id="ob-step-1">
+      <div class="modal-title">What's your name?</div>
+      <div class="modal-subtitle">Luna will use this to personalise your experience.</div>
+      <div class="form-group">
+        <label class="form-label">Your Name</label>
+        <input type="text" class="form-input" id="ob-name" placeholder="e.g. Anushka" autocomplete="off">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="obNext(1)">Continue →</button>
+    </div>
+
+    <!-- Step 2: Last period start -->
+    <div class="onboarding-step" id="ob-step-2">
+      <div class="modal-title">When did your last period start?</div>
+      <div class="modal-subtitle">This helps Luna calculate where you are in your cycle today.</div>
+      <div class="form-group">
+        <label class="form-label">Last Period Start Date</label>
+        <input type="date" class="form-input" id="ob-start-date">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="obNext(2)">Continue →</button>
+      <button class="btn btn-ghost btn-full mt-8" onclick="obBack(2)">← Back</button>
+    </div>
+
+    <!-- Step 3: Cycle length -->
+    <div class="onboarding-step" id="ob-step-3">
+      <div class="modal-title">How long is your cycle?</div>
+      <div class="modal-subtitle">The average is 28 days, but every body is different.</div>
+      <div class="form-group">
+        <label class="form-label">Cycle Length (days)</label>
+        <div class="number-stepper">
+          <button class="stepper-btn" onclick="adjustOb('ob-cycle-val', -1, 21, 45)">−</button>
+          <span class="stepper-value" id="ob-cycle-val">28</span>
+          <button class="stepper-btn" onclick="adjustOb('ob-cycle-val', 1, 21, 45)">+</button>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="obNext(3)">Continue →</button>
+      <button class="btn btn-ghost btn-full mt-8" onclick="obBack(3)">← Back</button>
+    </div>
+
+    <!-- Step 4: Period duration -->
+    <div class="onboarding-step" id="ob-step-4">
+      <div class="modal-title">How long does your period last?</div>
+      <div class="modal-subtitle">Typically 3–7 days. We'll use this for predictions.</div>
+      <div class="form-group">
+        <label class="form-label">Period Duration (days)</label>
+        <div class="number-stepper">
+          <button class="stepper-btn" onclick="adjustOb('ob-period-val', -1, 1, 10)">−</button>
+          <span class="stepper-value" id="ob-period-val">5</span>
+          <button class="stepper-btn" onclick="adjustOb('ob-period-val', 1, 1, 10)">+</button>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="obFinish()">Start My Journey 🌙</button>
+      <button class="btn btn-ghost btn-full mt-8" onclick="obBack(4)">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CALENDAR DATE MODAL ===== -->
+<div id="cal-modal" class="modal-overlay">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="cal-sheet-date serif" id="cal-sheet-date">Date</div>
+    <div class="cal-sheet-info" id="cal-sheet-info">Select an action</div>
+
+    <button class="cal-action-btn" onclick="calAction('start')">
+      <div class="cal-action-icon">🩸</div>
+      <span>Mark as Period Start</span>
+    </button>
+    <button class="cal-action-btn" onclick="calAction('end')">
+      <div class="cal-action-icon" style="background:var(--secondary-light);">✓</div>
+      <span>Mark as Period End</span>
+    </button>
+    <button class="cal-action-btn" onclick="calAction('remove')">
+      <div class="cal-action-icon" style="background:#FBE8E8;">✕</div>
+      <span>Remove Period Mark</span>
+    </button>
+    <button class="btn btn-ghost btn-full mt-8" onclick="closeModal('cal-modal')">Cancel</button>
+  </div>
+</div>
+
+<!-- ===== CONFIRM RESET MODAL ===== -->
+<div id="confirm-modal" class="confirm-overlay">
+  <div class="confirm-box">
+    <span class="confirm-icon">⚠️</span>
+    <div class="confirm-title serif">Reset All Data?</div>
+    <p class="confirm-text">This will permanently delete all your cycle logs, tracking history, and profile. This cannot be undone.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="closeModal('confirm-modal')">Cancel</button>
+      <button class="btn btn-danger" onclick="resetAllData()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+//  DATA CONSTANTS & CONFIG
+// ============================================================
+const KEYS = {
+  profile: 'luna_profile',
+  cycles:  'luna_cycles',
+  logs:    'luna_logs'
+};
+
+const AFFIRMATIONS = [
+  "My body is wise and capable.",
+  "I honour my natural rhythm.",
+  "Rest is productive.",
+  "I deserve kindness and patience.",
+  "Every phase of my cycle serves a purpose.",
+  "I trust the wisdom within me.",
+  "I am whole in every season of my cycle."
+];
+
+const SYMPTOMS = [
+  'Cramps', 'Headache', 'Bloating', 'Acne',
+  'Back Pain', 'Fatigue', 'Breast Tenderness', 'Nausea', 'Mood Swings'
+];
+
+const MOODS = [
+  { emoji: '😊', label: 'Happy' },
+  { emoji: '😌', label: 'Calm' },
+  { emoji: '😴', label: 'Tired' },
+  { emoji: '😔', label: 'Sad' },
+  { emoji: '😤', label: 'Irritated' },
+  { emoji: '🥰', label: 'Loving' },
+  { emoji: '😰', label: 'Anxious' }
+];
+
+const PHASE_DATA = {
+  menstrual: {
+    label: '🩸 Menstrual',
+    cls: 'phase-menstrual',
+    insight_title: 'Honour Your Need for Rest',
+    insight: 'Your body is working hard right now. Warmth, gentle movement like restorative yoga, and iron-rich foods can ease discomfort and restore your energy.',
+    wisdom: 'Prioritise rest, warmth, and gentle movement. Your body is doing deep work right now — honour that.'
+  },
+  follicular: {
+    label: '🌱 Follicular',
+    cls: 'phase-follicular',
+    insight_title: 'Ride Your Rising Energy',
+    insight: 'Oestrogen is climbing and so is your vitality. This is an ideal phase for starting new projects, intense workouts, and social connection.',
+    wisdom: 'Your energy is rising. This is a great time for new ideas and fresh starts — lean into that momentum.'
+  },
+  ovulation: {
+    label: '🌸 Ovulation',
+    cls: 'phase-ovulation',
+    insight_title: 'Peak Energy & Connection',
+    insight: 'You\'re at your communication and energy peak. Your skin may glow, your confidence is high — great time for important conversations or presentations.',
+    wisdom: 'You may feel more social and expressive. Lean into connection and communication today.'
+  },
+  luteal: {
+    label: '🌙 Luteal',
+    cls: 'phase-luteal',
+    insight_title: 'Nourish & Slow Down',
+    insight: 'Progesterone rises and you may feel the need to turn inward. Magnesium-rich foods, reduced caffeine, and gentle movement support this phase beautifully.',
+    wisdom: 'Slow down and nourish yourself. Rest is not laziness — it\'s wisdom. Your body knows what it needs.'
+  }
+};
+
+// ============================================================
+//  STATE
+// ============================================================
+let currentScreen = 'splash';
+let calendarDate  = new Date();
+let selectedCalDate = null;
+let trackerState  = { symptoms: [], mood: '', notes: '', water: 0, sleep: 7 };
+let profileBuffer = { cycleLength: 28, periodLength: 5 };
+
+// ============================================================
+//  LOCAL STORAGE HELPERS
+// ============================================================
+function getProfile() {
+  try { return JSON.parse(localStorage.getItem(KEYS.profile)) || null; }
+  catch { return null; }
+}
+
+function saveProfileData(data) {
+  localStorage.setItem(KEYS.profile, JSON.stringify(data));
+}
+
+function getCycles() {
+  try { return JSON.parse(localStorage.getItem(KEYS.cycles)) || []; }
+  catch { return []; }
+}
+
+function saveCyclesData(data) {
+  localStorage.setItem(KEYS.cycles, JSON.stringify(data));
+}
+
+function getLogs() {
+  try { return JSON.parse(localStorage.getItem(KEYS.logs)) || {}; }
+  catch { return {}; }
+}
+
+function saveLogsData(data) {
+  localStorage.setItem(KEYS.logs, JSON.stringify(data));
+}
+
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+
+function dateStr(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+
+function parseDate(s) {
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+
+function daysBetween(a, b) {
+  return Math.floor((b - a) / 86400000);
+}
+
+function addDays(d, n) {
+  const r = new Date(d); r.setDate(r.getDate() + n); return r;
+}
+
+function formatDate(d) {
+  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+
+function formatDateShort(d) {
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ============================================================
+//  CYCLE CALCULATIONS
+// ============================================================
+function getLastPeriodStart() {
+  const cycles = getCycles();
+  if (cycles.length === 0) {
+    const profile = getProfile();
+    if (profile && profile.lastPeriodStart) return parseDate(profile.lastPeriodStart);
+    return null;
+  }
+  const sorted = [...cycles].sort((a,b) => b.startDate.localeCompare(a.startDate));
+  return parseDate(sorted[0].startDate);
+}
+
+function calculateCycleDay() {
+  const profile = getProfile();
+  if (!profile) return { day: 1, total: 28 };
+  const start = getLastPeriodStart();
+  if (!start) return { day: 1, total: profile.cycleLength || 28 };
+  const day = daysBetween(start, new Date()) + 1;
+  const total = profile.cycleLength || 28;
+  return { day: Math.max(1, Math.min(day, total)), total };
+}
+
+function calculateCurrentPhase() {
+  const { day, total } = calculateCycleDay();
+  const profile = getProfile();
+  const pLen = (profile && profile.periodLength) || 5;
+  if (day <= pLen)           return 'menstrual';
+  if (day <= Math.round(total * 0.46)) return 'follicular';
+  if (day <= Math.round(total * 0.54)) return 'ovulation';
+  return 'luteal';
+}
+
+function predictNextPeriods(count = 3) {
+  const start = getLastPeriodStart();
+  if (!start) return [];
+  const profile = getProfile();
+  const cycles  = getCycles();
+  let avgLen = (profile && profile.cycleLength) || 28;
+
+  if (cycles.length >= 2) {
+    const sorted = [...cycles].sort((a,b) => a.startDate.localeCompare(b.startDate));
+    let total = 0, ct = 0;
+    for (let i = 1; i < sorted.length; i++) {
+      const gap = daysBetween(parseDate(sorted[i-1].startDate), parseDate(sorted[i].startDate));
+      if (gap > 15 && gap < 60) { total += gap; ct++; }
+    }
+    if (ct > 0) avgLen = Math.round(total / ct);
+  }
+
+  const result = [];
+  for (let i = 1; i <= count; i++) {
+    result.push(addDays(start, avgLen * i));
+  }
+  return result;
+}
+
+function calculateFertileWindow(cycleStart) {
+  const profile  = getProfile();
+  const cycleLen = (profile && profile.cycleLength) || 28;
+  const ovDay    = Math.round(cycleLen * 0.5);
+  return {
+    start:    addDays(cycleStart, ovDay - 5),
+    end:      addDays(cycleStart, ovDay - 1),
+    ovulation: addDays(cycleStart, ovDay - 1)
+  };
+}
+
+function calculateOvulationDay(cycleStart) {
+  const profile  = getProfile();
+  const cycleLen = (profile && profile.cycleLength) || 28;
+  return addDays(cycleStart, Math.round(cycleLen * 0.5) - 1);
+}
+
+function daysUntilNextPeriod() {
+  const next = predictNextPeriods(1);
+  if (!next.length) return null;
+  const diff = daysBetween(new Date(), next[0]);
+  return Math.max(0, diff);
+}
+
+function calculateInsights() {
+  const cycles = getCycles();
+  const logs   = getLogs();
+  const profile= getProfile();
+
+  if (cycles.length < 2) return null;
+
+  // Avg cycle length
+  const sorted = [...cycles].sort((a,b) => a.startDate.localeCompare(b.startDate));
+  let totalLen = 0, lenCount = 0;
+  for (let i = 1; i < sorted.length; i++) {
+    const gap = daysBetween(parseDate(sorted[i-1].startDate), parseDate(sorted[i].startDate));
+    if (gap > 15 && gap < 60) { totalLen += gap; lenCount++; }
+  }
+  const avgCycleLen = lenCount ? Math.round(totalLen / lenCount) : (profile.cycleLength || 28);
+
+  // Avg period duration
+  let durTotal = 0, durCount = 0;
+  for (const c of cycles) {
+    if (c.startDate && c.endDate) {
+      const dur = daysBetween(parseDate(c.startDate), parseDate(c.endDate)) + 1;
+      if (dur > 0 && dur < 15) { durTotal += dur; durCount++; }
+    }
+  }
+  const avgPeriodDur = durCount ? Math.round(durTotal / durCount) : (profile.periodLength || 5);
+
+  // Most common symptom
+  const symptomCounts = {};
+  for (const log of Object.values(logs)) {
+    if (log.symptoms) log.symptoms.forEach(s => { symptomCounts[s] = (symptomCounts[s]||0)+1; });
+  }
+  const topSymptom = Object.entries(symptomCounts).sort((a,b)=>b[1]-a[1])[0];
+
+  // Most common mood in luteal
+  const moodCounts = {};
+  for (const [date, log] of Object.entries(logs)) {
+    if (log.mood) {
+      // check if that date was luteal
+      const d = parseDate(date);
+      const start = getLastPeriodStart();
+      if (start) {
+        const dayNum = daysBetween(start, d) + 1;
+        const cycLen = avgCycleLen;
+        const pLen = profile.periodLength || 5;
+        const isLuteal = dayNum > Math.round(cycLen * 0.54) && dayNum <= cycLen;
+        if (isLuteal) moodCounts[log.mood] = (moodCounts[log.mood]||0)+1;
+      }
+    }
+  }
+  const topMood = Object.entries(moodCounts).sort((a,b)=>b[1]-a[1])[0];
+
+  return {
+    avgCycleLen,
+    avgPeriodDur,
+    topSymptom: topSymptom ? topSymptom[0] : null,
+    topMood:    topMood ? topMood[0] : null,
+    totalCycles: cycles.length
+  };
+}
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+function navigate(screen) {
+  // Hide all screens
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = '';
+  });
+
+  // Show target
+  const el = document.getElementById('screen-' + screen);
+  if (!el) return;
+
+  // Trigger animation
+  requestAnimationFrame(() => {
+    el.style.display = 'block';
+    requestAnimationFrame(() => {
+      el.classList.add('active');
+    });
+  });
+
+  // Update nav
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + screen);
+  if (navEl) navEl.classList.add('active');
+
+  // Show/hide nav
+  document.getElementById('bottom-nav').style.display =
+    screen === 'splash' ? 'none' : 'flex';
+
+  currentScreen = screen;
+
+  // Load screen data
+  if (screen === 'home')      loadHome();
+  if (screen === 'calendar')  loadCalendar();
+  if (screen === 'tracker')   loadTracker();
+  if (screen === 'insights')  loadInsights();
+  if (screen === 'profile')   loadProfile();
+}
+
+// ============================================================
+//  SPLASH & ONBOARDING
+// ============================================================
+function beginJourney() {
+  const profile = getProfile();
+  if (!profile || !profile.name) {
+    // Show splash still, open onboarding
+    openOnboarding();
+  } else {
+    navigate('home');
+  }
+}
+
+function openOnboarding() {
+  // Pre-fill date input with today
+  const today = todayStr();
+  document.getElementById('ob-start-date').value = today;
+  document.getElementById('ob-start-date').max   = today;
+
+  showModal('onboarding-modal');
+  setObStep(1);
+}
+
+let currentObStep = 1;
+
+function setObStep(n) {
+  currentObStep = n;
+  document.querySelectorAll('.onboarding-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('ob-step-' + n).classList.add('active');
+
+  // Update step dots
+  for (let i = 1; i <= 4; i++) {
+    const dot = document.getElementById('sdot-' + i);
+    dot.classList.toggle('done', i <= n);
+  }
+}
+
+function obNext(step) {
+  if (step === 1) {
+    const name = document.getElementById('ob-name').value.trim();
+    if (!name) { showToast('Please enter your name 🌸'); return; }
+  }
+  if (step === 2) {
+    const d = document.getElementById('ob-start-date').value;
+    if (!d) { showToast('Please select a date 📅'); return; }
+  }
+  setObStep(step + 1);
+}
+
+function obBack(step) {
+  setObStep(step - 1);
+}
+
+function adjustOb(id, delta, min, max) {
+  const el = document.getElementById(id);
+  let v = parseInt(el.textContent);
+  v = Math.max(min, Math.min(max, v + delta));
+  el.textContent = v;
+}
+
+function obFinish() {
+  const name       = document.getElementById('ob-name').value.trim();
+  const startDate  = document.getElementById('ob-start-date').value;
+  const cycleLen   = parseInt(document.getElementById('ob-cycle-val').textContent);
+  const periodLen  = parseInt(document.getElementById('ob-period-val').textContent);
+
+  const profile = { name, cycleLength: cycleLen, periodLength: periodLen, lastPeriodStart: startDate };
+  saveProfileData(profile);
+
+  // Save as first cycle
+  const cycles = getCycles();
+  cycles.push({ startDate, endDate: dateStr(addDays(parseDate(startDate), periodLen - 1)) });
+  saveCyclesData(cycles);
+
+  closeModal('onboarding-modal');
+  navigate('home');
+  showToast('Welcome to Luna, ' + name + '! 🌙');
+}
+
+// ============================================================
+//  MODAL HELPERS
+// ============================================================
+function showModal(id) {
+  const el = document.getElementById(id);
+  el.style.display = 'flex';
+  requestAnimationFrame(() => el.classList.add('visible'));
+}
+
+function closeModal(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('visible');
+  setTimeout(() => { el.style.display = 'none'; }, 350);
+}
+
+// Click overlay to close
+document.addEventListener('click', function(e) {
+  ['onboarding-modal', 'cal-modal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (e.target === el) closeModal(id);
+  });
+});
+
+// ============================================================
+//  HOME SCREEN
+// ============================================================
+function loadHome() {
+  const profile = getProfile();
+  if (!profile) return;
+
+  // Greeting
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+  document.getElementById('greeting-time').textContent = greeting;
+  document.getElementById('greeting-name').textContent = profile.name || 'Welcome';
+
+  // Cycle day
+  const { day, total } = calculateCycleDay();
+  document.getElementById('ring-day').textContent = 'Day ' + day;
+  document.getElementById('ring-label').textContent = 'of ' + total + ' days';
+
+  // Ring progress
+  const circumference = 2 * Math.PI * 70; // r=70
+  const progress = day / total;
+  const offset   = circumference * (1 - progress);
+  const ring = document.getElementById('ring-progress');
+  const phase = calculateCurrentPhase();
+
+  const phaseColors = {
+    menstrual:  '#D8A7B1',
+    follicular: '#C8B6E2',
+    ovulation:  '#C8A96B',
+    luteal:     '#C8B6E2'
+  };
+  ring.style.stroke = phaseColors[phase] || '#D8A7B1';
+
+  setTimeout(() => {
+    ring.style.strokeDashoffset = offset;
+  }, 100);
+
+  // Phase badge
+  const pd = PHASE_DATA[phase];
+  const badge = document.getElementById('phase-badge');
+  badge.textContent = pd.label;
+  badge.className = 'phase-badge ' + pd.cls;
+
+  // Next period countdown
+  const daysUntil = daysUntilNextPeriod();
+  const npText = document.getElementById('next-period-text');
+  if (daysUntil === 0) {
+    npText.innerHTML = '<strong>Your period may start today</strong>';
+  } else if (daysUntil !== null) {
+    npText.innerHTML = 'Next period in <strong>' + daysUntil + ' days</strong>';
+  } else {
+    npText.textContent = 'Log your cycle to see predictions';
+  }
+
+  // Wellness Insight
+  document.getElementById('wellness-insight-title').textContent = pd.insight_title;
+  document.getElementById('wellness-insight-text').textContent  = pd.insight;
+
+  // Affirmation
+  const affIdx = new Date().getDate() % AFFIRMATIONS.length;
+  document.getElementById('daily-affirmation').textContent = '"' + AFFIRMATIONS[affIdx] + '"';
+
+  // Cycle wisdom
+  document.getElementById('cycle-wisdom').textContent = pd.wisdom;
+
+  // Greeting sub
+  document.getElementById('greeting-sub').textContent =
+    'You\'re on day ' + day + ' of your cycle today.';
+}
+
+// ============================================================
+//  CALENDAR SCREEN
+// ============================================================
+function loadCalendar() {
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const year  = calendarDate.getFullYear();
+  const month = calendarDate.getMonth();
+
+  // Title
+  document.getElementById('cal-month-title').textContent =
+    calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  const grid     = document.getElementById('cal-grid');
+  const today    = new Date(); today.setHours(0,0,0,0);
+  const cycles   = getCycles();
+  const profile  = getProfile();
+  const pLen     = (profile && profile.periodLength) || 5;
+
+  // Build sets of period days and predicted days
+  const periodDays   = new Set();
+  const predictedPeriodDays = new Set();
+  const fertileDays  = new Set();
+  const ovulationDays= new Set();
+
+  // Real logged periods
+  for (const cycle of cycles) {
+    if (!cycle.startDate) continue;
+    const start = parseDate(cycle.startDate);
+    const end   = cycle.endDate ? parseDate(cycle.endDate) : addDays(start, pLen - 1);
+    let d = new Date(start);
+    while (d <= end) { periodDays.add(dateStr(d)); d = addDays(d, 1); }
+
+    // Fertile + ovulation for this cycle
+    const fw = calculateFertileWindow(start);
+    let fd = new Date(fw.start);
+    while (fd <= fw.end) { fertileDays.add(dateStr(fd)); fd = addDays(fd, 1); }
+    ovulationDays.add(dateStr(fw.ovulation));
+  }
+
+  // Predicted periods
+  const predicted = predictNextPeriods(3);
+  for (const pStart of predicted) {
+    for (let i = 0; i < pLen; i++) {
+      predictedPeriodDays.add(dateStr(addDays(pStart, i)));
+    }
+    const fw = calculateFertileWindow(pStart);
+    let fd = new Date(fw.start);
+    while (fd <= fw.end) { fertileDays.add(dateStr(fd)); fd = addDays(fd, 1); }
+    ovulationDays.add(dateStr(fw.ovulation));
+  }
+
+  // Generate grid
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  grid.innerHTML = '';
+
+  // Empty cells before month starts
+  for (let i = 0; i < firstDay; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-day empty';
+    grid.appendChild(cell);
+  }
+
+  // Day cells
+  for (let d = 1; d <= daysInMonth; d++) {
+    const cell    = document.createElement('div');
+    const dateObj = new Date(year, month, d);
+    dateObj.setHours(0,0,0,0);
+    const ds = dateStr(dateObj);
+
+    let cls = 'cal-day';
+    if (ds === dateStr(today)) cls += ' today';
+    if (periodDays.has(ds))    cls += ' period';
+    else if (predictedPeriodDays.has(ds)) cls += ' predicted-period';
+    else if (ovulationDays.has(ds)) cls += ' ovulation';
+    else if (fertileDays.has(ds))   cls += ' fertile';
+
+    cell.className = cls;
+    cell.textContent = d;
+    cell.addEventListener('click', () => openCalModal(dateObj));
+    grid.appendChild(cell);
+  }
+}
+
+function changeMonth(delta) {
+  calendarDate.setMonth(calendarDate.getMonth() + delta);
+  renderCalendar();
+}
+
+function openCalModal(dateObj) {
+  selectedCalDate = dateObj;
+  document.getElementById('cal-sheet-date').textContent = formatDate(dateObj);
+
+  const ds = dateStr(dateObj);
+  const cycles = getCycles();
+  let info = '';
+  const isLogged = cycles.some(c => {
+    if (!c.startDate) return false;
+    const s = parseDate(c.startDate);
+    const e = c.endDate ? parseDate(c.endDate) : addDays(s, ((getProfile()&&getProfile().periodLength)||5) - 1);
+    return dateObj >= s && dateObj <= e;
+  });
+
+  if (isLogged) info = 'This date is marked as a period day.';
+  else {
+    const future = dateObj > new Date();
+    info = future ? 'Tap to log or adjust your cycle.' : 'Tap to log your period for this date.';
+  }
+  document.getElementById('cal-sheet-info').textContent = info;
+  showModal('cal-modal');
+}
+
+function calAction(action) {
+  if (!selectedCalDate) return;
+  const ds = dateStr(selectedCalDate);
+  let cycles = getCycles();
+
+  if (action === 'start') {
+    const profile = getProfile();
+    const pLen = (profile && profile.periodLength) || 5;
+    // Add new cycle or update existing
+    const endDate = dateStr(addDays(selectedCalDate, pLen - 1));
+    cycles.push({ startDate: ds, endDate });
+    saveCyclesData(cycles);
+    showToast('Period start logged 🩸');
+  } else if (action === 'end') {
+    // Find most recent cycle before this date and set end
+    const sorted = cycles
+      .filter(c => c.startDate && c.startDate <= ds)
+      .sort((a,b) => b.startDate.localeCompare(a.startDate));
+    if (sorted.length) {
+      sorted[0].endDate = ds;
+      saveCyclesData(cycles);
+      showToast('Period end logged ✓');
+    } else {
+      showToast('Please log a period start first');
+    }
+  } else if (action === 'remove') {
+    cycles = cycles.filter(c => {
+      if (!c.startDate) return true;
+      const s = parseDate(c.startDate);
+      const e = c.endDate ? parseDate(c.endDate) : addDays(s, ((getProfile()&&getProfile().periodLength)||5) - 1);
+      return !(selectedCalDate >= s && selectedCalDate <= e);
+    });
+    saveCyclesData(cycles);
+    showToast('Period mark removed');
+  }
+
+  closeModal('cal-modal');
+  renderCalendar();
+}
+
+// ============================================================
+//  TRACKER SCREEN
+// ============================================================
+function loadTracker() {
+  const today = todayStr();
+  document.getElementById('tracker-date-label').textContent = formatDate(new Date());
+
+  // Load today's log if it exists
+  const logs = getLogs();
+  const todayLog = logs[today] || {};
+  trackerState = {
+    symptoms: todayLog.symptoms || [],
+    mood:     todayLog.mood     || '',
+    notes:    todayLog.notes    || '',
+    water:    todayLog.water    || 0,
+    sleep:    todayLog.sleep    || 7
+  };
+
+  renderSymptoms();
+  renderMoods();
+  renderWater();
+  renderSleep();
+  document.getElementById('mood-notes').value = trackerState.notes;
+}
+
+function renderSymptoms() {
+  const container = document.getElementById('symptom-pills');
+  container.innerHTML = '';
+  SYMPTOMS.forEach(s => {
+    const pill = document.createElement('button');
+    pill.className = 'pill' + (trackerState.symptoms.includes(s) ? ' selected' : '');
+    pill.textContent = s;
+    pill.onclick = () => toggleSymptom(s, pill);
+    container.appendChild(pill);
+  });
+}
+
+function toggleSymptom(symptom, el) {
+  if (trackerState.symptoms.includes(symptom)) {
+    trackerState.symptoms = trackerState.symptoms.filter(s => s !== symptom);
+    el.classList.remove('selected');
+  } else {
+    trackerState.symptoms.push(symptom);
+    el.classList.add('selected');
+  }
+  // Pulse animation
+  el.style.transform = 'scale(0.93)';
+  setTimeout(() => el.style.transform = '', 150);
+}
+
+function renderMoods() {
+  const container = document.getElementById('mood-grid');
+  container.innerHTML = '';
+  MOODS.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className = 'mood-btn' + (trackerState.mood === m.label ? ' selected' : '');
+    btn.innerHTML = '<span class="mood-emoji">' + m.emoji + '</span>' + m.label;
+    btn.onclick = () => selectMood(m.label, btn);
+    container.appendChild(btn);
+  });
+}
+
+function selectMood(label, el) {
+  trackerState.mood = label;
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  el.style.transform = 'scale(1.06)';
+  setTimeout(() => el.style.transform = '', 200);
+}
+
+function renderWater() {
+  const container = document.getElementById('water-glasses');
+  container.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'glass-btn' + (i < trackerState.water ? ' filled' : '');
+    btn.textContent = '💧';
+    btn.onclick = () => setWater(i + 1);
+    container.appendChild(btn);
+  }
+  const pct = (trackerState.water / 8) * 100;
+  document.getElementById('water-fill').style.width = pct + '%';
+  document.getElementById('water-label').textContent = trackerState.water + ' / 8 glasses';
+}
+
+function setWater(n) {
+  trackerState.water = trackerState.water === n ? n - 1 : n;
+  if (trackerState.water < 0) trackerState.water = 0;
+  renderWater();
+}
+
+function renderSleep() {
+  document.getElementById('sleep-value').textContent = trackerState.sleep;
+  const badge = document.getElementById('sleep-quality-badge');
+  let quality, cls;
+  if (trackerState.sleep >= 7) { quality = 'Restful'; cls = 'restful'; }
+  else if (trackerState.sleep >= 5) { quality = 'Fair'; cls = 'fair'; }
+  else { quality = 'Low'; cls = 'low'; }
+  badge.textContent = quality;
+  badge.className = 'sleep-quality ' + cls;
+}
+
+function changeSleep(delta) {
+  trackerState.sleep = Math.max(0, Math.min(12, trackerState.sleep + delta));
+  renderSleep();
+}
+
+function saveTracker() {
+  trackerState.notes = document.getElementById('mood-notes').value.trim();
+  const logs = getLogs();
+  logs[todayStr()] = { ...trackerState };
+  saveLogsData(logs);
+  showToast("Today's log saved 💫");
+  // Button feedback
+  const btn = document.querySelector('#screen-tracker .btn-primary');
+  btn.textContent = 'Saved ✓';
+  btn.style.background = 'linear-gradient(135deg, #A8C8A0, #7BAE73)';
+  setTimeout(() => {
+    btn.textContent = "Save Today's Log ✓";
+    btn.style.background = '';
+  }, 2000);
+}
+
+// ============================================================
+//  INSIGHTS SCREEN
+// ============================================================
+function loadInsights() {
+  const cycles   = getCycles();
+  const container= document.getElementById('insights-content');
+  const history  = document.getElementById('history-section');
+
+  if (cycles.length < 2) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <span class="empty-state-icon">🌱</span>
+        <div class="empty-state-title">Your insights are growing</div>
+        <p class="empty-state-text">Keep logging — your personalised insights will appear after <strong>2 full cycles</strong>. You've logged <strong>${cycles.length}</strong> cycle${cycles.length===1?'':'s'} so far.</p>
+      </div>`;
+    history.innerHTML = '';
+    renderHistory(history, cycles);
+    return;
+  }
+
+  const ins = calculateInsights();
+  if (!ins) return;
+
+  // Stat grid
+  const grid = document.createElement('div');
+  grid.className = 'insight-stat-grid';
+  grid.innerHTML = `
+    <div class="insight-stat-card">
+      <div class="insight-stat-icon">📅</div>
+      <div class="insight-stat-value">${ins.avgCycleLen}</div>
+      <div class="insight-stat-label">Average cycle length (days)</div>
+    </div>
+    <div class="insight-stat-card">
+      <div class="insight-stat-icon">🩸</div>
+      <div class="insight-stat-value">${ins.avgPeriodDur}</div>
+      <div class="insight-stat-label">Average period duration (days)</div>
+    </div>
+    <div class="insight-stat-card">
+      <div class="insight-stat-icon">🌙</div>
+      <div class="insight-stat-value">${ins.totalCycles}</div>
+      <div class="insight-stat-label">Cycles logged</div>
+    </div>
+    <div class="insight-stat-card">
+      <div class="insight-stat-icon">✨</div>
+      <div class="insight-stat-value">${Object.keys(getLogs()).length}</div>
+      <div class="insight-stat-label">Days tracked</div>
+    </div>`;
+
+  const cards = document.createElement('div');
+  cards.innerHTML = '';
+
+  if (ins.topSymptom) {
+    cards.innerHTML += `
+      <div class="insight-full-card">
+        <div class="insight-icon-circle">🩺</div>
+        <div class="insight-text-block">
+          <div class="insight-card-title">Most Common Symptom</div>
+          <div class="insight-card-detail">You most frequently experience <strong>${ins.topSymptom}</strong> in the days before your period.</div>
+        </div>
+      </div>`;
+  }
+
+  if (ins.topMood) {
+    const moodObj = MOODS.find(m => m.label === ins.topMood);
+    const moodEmoji = moodObj ? moodObj.emoji : '🌈';
+    cards.innerHTML += `
+      <div class="insight-full-card">
+        <div class="insight-icon-circle">${moodEmoji}</div>
+        <div class="insight-text-block">
+          <div class="insight-card-title">Luteal Phase Mood Pattern</div>
+          <div class="insight-card-detail">During your luteal phase, you most often feel <strong>${ins.topMood}</strong>. Knowing this can help you plan ahead.</div>
+        </div>
+      </div>`;
+  }
+
+  // Next predicted period
+  const nextPreds = predictNextPeriods(1);
+  if (nextPreds.length) {
+    const dUntil = daysUntilNextPeriod();
+    cards.innerHTML += `
+      <div class="insight-full-card">
+        <div class="insight-icon-circle">🗓️</div>
+        <div class="insight-text-block">
+          <div class="insight-card-title">Next Predicted Period</div>
+          <div class="insight-card-detail"><strong>${formatDateShort(nextPreds[0])}</strong> — that's in ${dUntil} day${dUntil===1?'':'s'}.</div>
+        </div>
+      </div>`;
+  }
+
+  container.innerHTML = '';
+  container.appendChild(grid);
+  container.appendChild(cards);
+
+  renderHistory(history, cycles);
+}
+
+function renderHistory(container, cycles) {
+  if (!cycles.length) { container.innerHTML = ''; return; }
+  const sorted = [...cycles].sort((a,b) => b.startDate.localeCompare(a.startDate));
+
+  const toggle = document.createElement('div');
+  toggle.className = 'history-toggle';
+  toggle.innerHTML = `<span class="history-toggle-title">📜 Cycle History (${cycles.length})</span><span class="history-chevron" id="history-chevron">▼</span>`;
+
+  const body = document.createElement('div');
+  body.className = 'history-body';
+  body.id = 'history-body';
+
+  sorted.forEach((c, i) => {
+    const start = c.startDate ? parseDate(c.startDate) : null;
+    const end   = c.endDate   ? parseDate(c.endDate)   : null;
+    const dur   = start && end ? daysBetween(start, end) + 1 : '—';
+    const row = document.createElement('div');
+    row.className = 'history-row';
+    row.innerHTML = `
+      <span class="history-cycle-num">#${sorted.length - i}</span>
+      <span>${start ? formatDateShort(start) : '—'}</span>
+      <span>${dur} days</span>`;
+    body.appendChild(row);
+  });
+
+  toggle.onclick = () => {
+    body.classList.toggle('open');
+    document.getElementById('history-chevron').classList.toggle('open');
+  };
+
+  container.innerHTML = '';
+  container.appendChild(toggle);
+  container.appendChild(body);
+}
+
+// ============================================================
+//  PROFILE SCREEN
+// ============================================================
+function loadProfile() {
+  const profile = getProfile();
+  if (!profile) return;
+  profileBuffer = { cycleLength: profile.cycleLength || 28, periodLength: profile.periodLength || 5 };
+  document.getElementById('profile-name').value = profile.name || '';
+  document.getElementById('profile-display-name').textContent = profile.name || '—';
+  document.getElementById('profile-cycle-len').textContent  = profileBuffer.cycleLength;
+  document.getElementById('profile-period-len').textContent = profileBuffer.periodLength;
+}
+
+function adjustProfile(field, delta) {
+  const min = field === 'cycleLength' ? 21 : 1;
+  const max = field === 'cycleLength' ? 45 : 10;
+  profileBuffer[field] = Math.max(min, Math.min(max, profileBuffer[field] + delta));
+  const idMap = { cycleLength: 'profile-cycle-len', periodLength: 'profile-period-len' };
+  document.getElementById(idMap[field]).textContent = profileBuffer[field];
+}
+
+function saveProfile() {
+  const name = document.getElementById('profile-name').value.trim();
+  if (!name) { showToast('Please enter your name'); return; }
+  const profile = getProfile() || {};
+  profile.name         = name;
+  profile.cycleLength  = profileBuffer.cycleLength;
+  profile.periodLength = profileBuffer.periodLength;
+  saveProfileData(profile);
+  document.getElementById('profile-display-name').textContent = name;
+  showToast('Profile saved ✓');
+}
+
+function confirmReset() {
+  document.getElementById('confirm-modal').style.display = 'flex';
+  requestAnimationFrame(() => document.getElementById('confirm-modal').classList.add('visible'));
+}
+
+function resetAllData() {
+  localStorage.removeItem(KEYS.profile);
+  localStorage.removeItem(KEYS.cycles);
+  localStorage.removeItem(KEYS.logs);
+  closeModal('confirm-modal');
+  showToast('All data cleared');
+  setTimeout(() => {
+    navigate('splash');
+    // Reset splash
+    document.getElementById('screen-splash').classList.add('active');
+  }, 400);
+}
+
+// ============================================================
+//  TOAST
+// ============================================================
+let toastTimer = null;
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+function init() {
+  document.getElementById('bottom-nav').style.display = 'none';
+
+  const profile = getProfile();
+  if (profile && profile.name) {
+    navigate('home');
+  }
+  // else: splash is already .active from HTML, will show via CSS
+}
+
+function renderSymptomShell() {
+  // Pre-build so tracker looks right even before loadTracker
+}
+function renderMoodShell() {}
+function renderWaterShell() {
+  const c = document.getElementById('water-glasses');
+  if (c && !c.innerHTML) {
+    for (let i = 0; i < 8; i++) {
+      const b = document.createElement('button');
+      b.className = 'glass-btn';
+      b.textContent = '💧';
+      b.onclick = () => setWater(i+1);
+      c.appendChild(b);
+    }
+  }
+}
+
+// Run on load
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
