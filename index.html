@@ -1,1699 +1,1965 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>Luna — Understand your cycle.</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<!-- Supabase JS SDK -->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Soul Garden — Grow your habits. Grow yourself.</title>
+<meta name="description" content="Soul Garden — a living, emotional wellness companion. Grow your habits. Grow yourself." />
+<meta name="theme-color" content="#7BAF8E" />
+
+<!-- ============================================================
+     GOOGLE FONTS — Playfair Display (headings) + DM Sans (body)
+============================================================ -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet" />
+
+<!-- Supabase JS client (backend: auth + database) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- First-visit companion tour (ADDITIVE — safe to remove; see tour.css / tour.js) -->
+<link rel="stylesheet" href="tour.css" />
 
 <style>
 /* ============================================================
-   CSS VARIABLES & RESET
+   SOUL GARDEN — STYLES
+   Organised by section:
+   1. Tokens & Reset
+   2. Layout primitives (cards, buttons, inputs)
+   3. Screens & navigation
+   4. The Garden scene (layers, levels, weather, day/night)
+   5. Companion
+   6. Components (habits, insights, drawer, profile)
+   7. Animations / keyframes
+   8. Responsive
 ============================================================ */
-:root {
-  --bg:              #F8F3ED;
-  --bg-card:         #FFFCF9;
-  --primary:         #D8A7B1;
-  --primary-light:   #F2D9DF;
-  --primary-dark:    #C0899A;
-  --secondary:       #C8B6E2;
-  --secondary-light: #EDE6F6;
-  --accent:          #C8A96B;
-  --accent-light:    #F3E9D2;
-  --text:            #3A3A3A;
-  --text-muted:      #8A8A8A;
-  --text-light:      #B8B8B8;
-  --white:           #FFFFFF;
-  --shadow:          0 8px 24px rgba(0,0,0,0.08);
-  --shadow-sm:       0 4px 12px rgba(0,0,0,0.06);
-  --shadow-lg:       0 16px 40px rgba(0,0,0,0.12);
-  --radius:          18px;
-  --radius-sm:       12px;
-  --radius-pill:     100px;
-  --nav-height:      72px;
-  --max-w:           480px;
+
+/* ---------- 1. TOKENS & RESET ---------- */
+:root{
+  --bg:        #F4F0E8;  /* warm parchment */
+  --primary:   #7BAF8E;  /* sage green */
+  --primary-d: #5E9576;
+  --secondary: #C8B6E2;  /* soft lavender */
+  --accent:    #C8A96B;  /* muted gold */
+  --earth:     #A0785A;  /* warm brown */
+  --text:      #3A3A3A;  /* dark charcoal */
+  --text-light:#7A7A7A;  /* muted text */
+  --card:      #FFFFFF;
+  --card-soft: #FBF8F2;
+  --radius:    18px;
+  --radius-sm: 12px;
+  --shadow:    0 10px 30px rgba(58,58,58,.08), 0 2px 8px rgba(58,58,58,.05);
+  --shadow-sm: 0 4px 14px rgba(58,58,58,.07);
+  --ease:      cubic-bezier(.22,.61,.36,1);
 }
 
-*, *::before, *::after {
-  box-sizing: border-box; margin: 0; padding: 0;
-  -webkit-tap-highlight-color: transparent;
+*{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ height:100%; }
+body{
+  font-family:'DM Sans', system-ui, sans-serif;
+  color:var(--text);
+  background:var(--bg);
+  line-height:1.55;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
 }
-html, body { height: 100%; overscroll-behavior: none; }
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--bg); color: var(--text);
-  font-size: 15px; line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-}
-h1,h2,h3,.serif { font-family: 'Playfair Display', serif; }
+h1,h2,h3,.serif{ font-family:'Playfair Display', serif; font-weight:600; line-height:1.2; }
+button{ font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
+input,select{ font-family:inherit; }
+::selection{ background:var(--secondary); }
 
-/* ============================================================
-   APP SHELL
-============================================================ */
-#app {
-  max-width: var(--max-w); margin: 0 auto;
-  min-height: 100vh; position: relative;
-  overflow: hidden; background: var(--bg);
-  box-shadow: 0 0 60px rgba(0,0,0,0.08);
-}
-
-/* ============================================================
-   SCREENS
-============================================================ */
-.screen {
-  display: none; position: absolute; inset: 0;
-  padding-bottom: var(--nav-height);
-  overflow-y: auto; overflow-x: hidden;
-  scroll-behavior: smooth;
-  opacity: 0; transform: translateY(6px);
-  transition: opacity 0.32s ease, transform 0.32s ease;
-}
-.screen.active { display: block; opacity: 1; transform: translateY(0); }
-
-#screen-splash { padding-bottom: 0; display: none; }
-#screen-splash.active {
-  display: flex !important; align-items: center;
-  justify-content: center; opacity: 1; transform: none;
-}
-#screen-auth { padding-bottom: 0; }
-
-.screen-inner { padding: 24px 20px 32px; min-height: calc(100vh - var(--nav-height)); }
-
-/* ============================================================
-   BOTTOM NAV
-============================================================ */
-#bottom-nav {
-  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-  width: 100%; max-width: var(--max-w); height: var(--nav-height);
-  background: rgba(255,252,249,0.92);
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid rgba(216,167,177,0.15);
-  display: flex; align-items: center; justify-content: space-around;
-  z-index: 100; padding-bottom: env(safe-area-inset-bottom, 0);
-}
-.nav-item {
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  min-width: 44px; min-height: 44px; justify-content: center;
-  cursor: pointer; border-radius: var(--radius-sm);
-  padding: 6px 10px; transition: all 0.2s ease; position: relative;
-}
-.nav-item:active { transform: scale(0.92); }
-.nav-icon { font-size: 22px; transition: transform 0.2s ease; line-height: 1; }
-.nav-label { font-size: 10px; font-weight: 500; color: var(--text-light); letter-spacing: 0.3px; transition: color 0.2s ease; }
-.nav-item.active .nav-label { color: var(--primary-dark); font-weight: 600; }
-.nav-item.active .nav-icon  { transform: scale(1.15); }
-.nav-item.active::after {
-  content: ''; position: absolute; bottom: 2px; left: 50%;
-  transform: translateX(-50%); width: 4px; height: 4px;
-  border-radius: 50%; background: var(--primary);
+/* App shell — mobile-first 375px frame, centered on larger screens */
+#app{
+  max-width:480px;
+  margin:0 auto;
+  min-height:100vh;
+  position:relative;
+  background:var(--bg);
+  box-shadow:0 0 60px rgba(0,0,0,.06);
+  overflow:hidden;
 }
 
-/* ============================================================
-   CARDS
-============================================================ */
-.card {
-  background: var(--bg-card); border-radius: var(--radius);
-  padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* ---------- 2. PRIMITIVES ---------- */
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+  padding:18px;
+  margin-bottom:16px;
 }
-.card:active { transform: scale(0.99); box-shadow: var(--shadow-sm); }
-.card-title { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
-.card-accent { border-left: 3px solid var(--accent); padding-left: 16px; }
-
-/* ============================================================
-   BUTTONS
-============================================================ */
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
-  border: none; cursor: pointer; border-radius: var(--radius-pill);
-  padding: 14px 28px; min-height: 48px;
-  transition: all 0.2s ease; letter-spacing: 0.2px;
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:14px 20px;
+  border-radius:14px;
+  font-weight:500; font-size:15px;
+  background:var(--primary); color:#fff;
+  transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s;
+  box-shadow:0 6px 16px rgba(123,175,142,.35);
+  width:100%;
 }
-.btn:active { transform: scale(0.96); }
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: var(--white); box-shadow: 0 6px 20px rgba(216,167,177,0.4);
+.btn:active{ transform:scale(.97); }
+.btn.secondary{
+  background:#fff; color:var(--primary-d);
+  box-shadow:inset 0 0 0 1.5px rgba(123,175,142,.5);
 }
-.btn-primary:hover { box-shadow: 0 8px 24px rgba(216,167,177,0.5); transform: translateY(-1px); }
-.btn-secondary { background: var(--secondary-light); color: var(--text); }
-.btn-ghost { background: transparent; color: var(--text-muted); padding: 10px 16px; }
-.btn-danger { background: #FBE8E8; color: #C05050; }
-.btn-full { width: 100%; }
-.btn-sm { font-size: 13px; padding: 10px 20px; min-height: 40px; }
-.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
+.btn.ghost{ background:transparent; color:var(--text-light); box-shadow:none; }
+.btn:disabled{ opacity:.5; cursor:default; }
 
-/* ============================================================
-   FORM ELEMENTS
-============================================================ */
-.form-group { margin-bottom: 20px; }
-.form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
-.form-input {
-  width: 100%; padding: 14px 16px;
-  border: 1.5px solid rgba(216,167,177,0.25);
-  border-radius: var(--radius-sm); background: var(--bg);
-  font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text);
-  outline: none; transition: all 0.2s ease; min-height: 48px;
+label.field{ display:block; margin-bottom:14px; }
+label.field span{ display:block; font-size:13px; color:var(--text-light); margin-bottom:6px; font-weight:500; }
+.input{
+  width:100%; padding:13px 14px;
+  border-radius:12px; border:1.5px solid #E8E1D4;
+  background:var(--card-soft); font-size:15px; color:var(--text);
+  transition:border-color .2s, box-shadow .2s;
 }
-.form-input:focus { border-color: var(--primary); background: var(--white); box-shadow: 0 0 0 3px rgba(216,167,177,0.12); }
-.form-input::placeholder { color: var(--text-light); }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
+.input:focus{ outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(123,175,142,.15); }
 
-.number-stepper {
-  display: flex; align-items: center;
-  background: var(--bg); border: 1.5px solid rgba(216,167,177,0.25);
-  border-radius: var(--radius-sm); overflow: hidden;
+.muted{ color:var(--text-light); }
+.center{ text-align:center; }
+.row{ display:flex; align-items:center; gap:10px; }
+.spread{ display:flex; align-items:center; justify-content:space-between; }
+.pill{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 12px; border-radius:999px;
+  background:rgba(123,175,142,.14); color:var(--primary-d);
+  font-size:13px; font-weight:500;
 }
-.stepper-btn {
-  width: 44px; height: 48px; background: none; border: none;
-  font-size: 20px; cursor: pointer; color: var(--primary-dark); font-weight: 500;
-  transition: background 0.2s ease; display: flex; align-items: center; justify-content: center;
+.section-title{ font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:var(--text-light); margin:4px 0 12px; font-weight:700; }
+
+/* ---------- 3. SCREENS ---------- */
+.screen{
+  display:none;
+  min-height:100vh;
+  padding:0 18px;
+  animation:fadeIn .5s var(--ease);
 }
-.stepper-btn:active { background: var(--primary-light); }
-.stepper-value { flex: 1; text-align: center; font-size: 16px; font-weight: 600; color: var(--text); }
+.screen.active{ display:block; }
+.screen.has-nav{ padding-bottom:96px; }
+.screen-scroll{ padding-top:18px; }
 
-/* ============================================================
-   SECTION HEADERS
-============================================================ */
-.section-header { margin-bottom: 20px; }
-.section-title  { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; color: var(--text); line-height: 1.3; }
-.section-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+@keyframes fadeIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
 
-/* ============================================================
-   SPLASH
-============================================================ */
-.splash-inner {
-  text-align: center; padding: 40px 32px;
-  animation: splashFadeIn 1s ease forwards;
+/* Top bar */
+.topbar{
+  position:sticky; top:0; z-index:20;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 2px 12px;
+  background:linear-gradient(to bottom, var(--bg) 70%, rgba(244,240,232,0));
+  backdrop-filter:blur(4px);
 }
-@keyframes splashFadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-.splash-moon { font-size: 72px; margin-bottom: 20px; display: block; animation: moonGlow 3s ease-in-out infinite alternate; }
-@keyframes moonGlow {
-  from { filter: drop-shadow(0 0 8px rgba(216,167,177,0.3)); }
-  to   { filter: drop-shadow(0 0 24px rgba(216,167,177,0.7)); }
+.brand{ display:flex; align-items:center; gap:8px; font-family:'Playfair Display',serif; font-size:20px; font-weight:600; }
+.brand .leaf{ font-size:20px; }
+.topbar-right{ display:flex; align-items:center; gap:10px; }
+.icon-btn{
+  width:42px; height:42px; border-radius:50%;
+  background:var(--card); box-shadow:var(--shadow-sm);
+  display:flex; align-items:center; justify-content:center; font-size:18px;
+  transition:transform .2s var(--ease);
 }
-.splash-title   { font-size: 56px; font-weight: 700; color: var(--text); letter-spacing: -1px; line-height: 1; margin-bottom: 12px; }
-.splash-tagline { font-family: 'Playfair Display', serif; font-style: italic; font-size: 16px; color: var(--text-muted); margin-bottom: 48px; line-height: 1.6; }
-.splash-dots    { display: flex; gap: 6px; justify-content: center; margin-bottom: 40px; }
-.splash-dot     { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); opacity: 0.4; }
-.splash-dot:nth-child(2) { background: var(--secondary); }
-.splash-dot:nth-child(3) { background: var(--accent); }
+.icon-btn:active{ transform:scale(.92); }
 
-/* ============================================================
-   AUTH SCREEN
-============================================================ */
-.auth-inner {
-  min-height: 100vh; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; padding: 40px 28px;
-  background: linear-gradient(160deg, #F8F3ED 0%, #F2E5EC 50%, #EDE6F6 100%);
+/* Bottom navigation */
+.bottom-nav{
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:480px;
+  display:flex; justify-content:space-around;
+  padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(14px);
+  box-shadow:0 -6px 24px rgba(58,58,58,.07);
+  z-index:50;
 }
-.auth-logo { font-size: 48px; margin-bottom: 8px; }
-.auth-title { font-size: 36px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
-.auth-tagline { font-family: 'Playfair Display', serif; font-style: italic; font-size: 14px; color: var(--text-muted); margin-bottom: 40px; }
-.auth-card { background: var(--bg-card); border-radius: var(--radius); padding: 28px 24px; box-shadow: var(--shadow-lg); width: 100%; max-width: 400px; }
-.auth-tabs { display: flex; gap: 0; margin-bottom: 28px; background: var(--bg); border-radius: var(--radius-sm); padding: 4px; }
-.auth-tab {
-  flex: 1; padding: 10px; text-align: center; font-size: 14px; font-weight: 600;
-  border-radius: 9px; cursor: pointer; transition: all 0.2s ease; color: var(--text-muted);
+.nav-item{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+  padding:6px 0; font-size:10px; color:var(--text-light); font-weight:500;
+  transition:color .25s;
 }
-.auth-tab.active { background: var(--white); color: var(--text); box-shadow: var(--shadow-sm); }
-.auth-form { display: none; }
-.auth-form.active { display: block; animation: fadeSlideIn 0.25s ease; }
-.auth-divider { text-align: center; font-size: 12px; color: var(--text-light); margin: 16px 0; }
-.auth-error { background: #FBE8E8; color: #C05050; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
-.auth-error.show { display: block; }
-.auth-success { background: #E8F5E9; color: #4CAF50; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
-.auth-success.show { display: block; }
-.auth-footer { text-align: center; font-size: 11px; color: var(--text-light); margin-top: 20px; line-height: 1.7; }
+.nav-item .nav-ico{ font-size:21px; transition:transform .3s var(--ease); }
+.nav-item.active{ color:var(--primary-d); }
+.nav-item.active .nav-ico{ transform:translateY(-3px) scale(1.12); }
 
-/* ============================================================
-   LOADING OVERLAY
-============================================================ */
-#loading-overlay {
-  position: fixed; inset: 0; background: rgba(248,243,237,0.92);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  z-index: 500; opacity: 0; pointer-events: none;
-  transition: opacity 0.25s ease;
+/* ---------- SPLASH ---------- */
+#screen-splash{
+  display:none;
+  min-height:100vh; padding:40px 28px;
+  flex-direction:column; align-items:center; justify-content:center; text-align:center;
+  background:
+    radial-gradient(1200px 400px at 50% -10%, rgba(200,182,226,.25), transparent),
+    radial-gradient(1000px 500px at 50% 120%, rgba(123,175,142,.2), transparent),
+    var(--bg);
 }
-#loading-overlay.show { opacity: 1; pointer-events: all; }
-.loading-moon { font-size: 40px; animation: moonGlow 1.5s ease-in-out infinite alternate; margin-bottom: 16px; }
-.loading-text  { font-family: 'Playfair Display', serif; font-style: italic; font-size: 14px; color: var(--text-muted); }
+#screen-splash.active{ display:flex; }
+.splash-leaf{ font-size:64px; animation:sway 5s ease-in-out infinite; }
+#screen-splash h1{ font-size:42px; margin:14px 0 6px; }
+#screen-splash .tag{ font-style:italic; color:var(--text-light); font-size:17px; margin-bottom:36px; }
+.splash-btns{ width:100%; max-width:300px; display:flex; flex-direction:column; gap:12px; }
+.splash-note{ margin-top:24px; font-size:13px; color:var(--text-light); font-style:italic; }
 
-/* Sync indicator */
-#sync-indicator {
-  position: fixed; top: 16px; right: 16px; z-index: 200;
-  background: var(--bg-card); border-radius: var(--radius-pill);
-  padding: 6px 12px; font-size: 11px; font-weight: 600;
-  box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 5px;
-  opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+/* Auth cards */
+.auth-wrap{ min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:30px 4px; }
+.auth-card{ background:var(--card); border-radius:22px; box-shadow:var(--shadow); padding:26px 22px; }
+.auth-card h2{ font-size:26px; margin-bottom:4px; }
+.auth-card .sub{ color:var(--text-light); font-size:14px; margin-bottom:22px; }
+.auth-card.shake{ animation:shake .5s; }
+.err-msg{ color:#C0654E; font-size:13.5px; margin-top:10px; text-align:center; min-height:18px; transition:opacity .3s; }
+.link-btn{ display:block; text-align:center; margin-top:16px; color:var(--primary-d); font-weight:500; font-size:14px; }
+
+/* Choice grids (companion / zones) */
+.choice-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(80px,1fr)); gap:10px; margin-bottom:14px; }
+.choice{
+  border-radius:16px; padding:14px 6px; text-align:center;
+  background:var(--card-soft); border:2px solid transparent;
+  transition:transform .2s var(--ease), border-color .2s, background .2s;
 }
-#sync-indicator.show { opacity: 1; }
-#sync-indicator.syncing { color: var(--accent); }
-#sync-indicator.synced  { color: #4CAF50; }
-#sync-indicator.error   { color: #C05050; }
+.choice:active{ transform:scale(.95); }
+.choice .emo{ font-size:30px; display:block; line-height:1.2; }
+.choice .lbl{ font-size:11.5px; color:var(--text-light); margin-top:4px; font-weight:500; }
+.choice.sel{ border-color:var(--primary); background:rgba(123,175,142,.12); }
+.choice.sel .lbl{ color:var(--primary-d); }
 
-/* ============================================================
-   MODAL OVERLAYS
-============================================================ */
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(58,58,58,0.4);
-  backdrop-filter: blur(4px); z-index: 200;
-  display: flex; align-items: flex-end;
-  opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+/* ---------- 4. THE GARDEN SCENE ---------- */
+.garden-stage{
+  position:relative;
+  width:100%; height:360px;
+  border-radius:22px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+  margin-bottom:14px;
+  background:#bcd9e6;
+  transition:filter 1s ease;
+  cursor:default;
 }
-.modal-overlay.visible { opacity: 1; pointer-events: all; }
-.modal-sheet {
-  background: var(--bg-card); border-radius: var(--radius) var(--radius) 0 0;
-  padding: 28px 24px 40px; width: 100%; max-width: var(--max-w); margin: 0 auto;
-  transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  max-height: 90vh; overflow-y: auto;
+.garden-stage.full{ height:62vh; min-height:420px; }
+
+/* Sky — changes with day/night */
+.sky{ position:absolute; inset:0; transition:background 1.6s ease; }
+.sky.morning{   background:linear-gradient(180deg,#FCE9C8 0%,#F6D9A8 35%,#CFE7C8 100%); }
+.sky.afternoon{ background:linear-gradient(180deg,#9FD7F2 0%,#C7E9F5 45%,#DCEFD2 100%); }
+.sky.evening{   background:linear-gradient(180deg,#F6C18B 0%,#E8967E 40%,#B98A9A 100%); }
+.sky.night{     background:linear-gradient(180deg,#1B2350 0%,#2C3A6B 45%,#3A4A6B 100%); }
+
+/* Sun / Moon */
+.celestial{
+  position:absolute; top:34px; right:40px;
+  width:54px; height:54px; border-radius:50%;
+  transition:all 1.6s ease; z-index:2;
 }
-.modal-overlay.visible .modal-sheet { transform: translateY(0); }
-.modal-handle { width: 40px; height: 4px; background: var(--text-light); border-radius: 2px; margin: 0 auto 24px; }
-.modal-title  { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; margin-bottom: 6px; }
-.modal-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; }
+.morning .celestial,.afternoon .celestial{
+  background:radial-gradient(circle,#FFF6D8,#FFE08A);
+  box-shadow:0 0 50px 18px rgba(255,224,138,.55);
+}
+.evening .celestial{ background:radial-gradient(circle,#FFE0B0,#F49E6B); box-shadow:0 0 46px 14px rgba(244,158,107,.5); top:120px; }
+.night .celestial{ background:radial-gradient(circle,#FBFBFF,#D7DCF0); box-shadow:0 0 30px 8px rgba(215,220,240,.4); }
+.night .celestial::after{ /* crater hint */ content:''; position:absolute; top:14px; left:14px; width:10px;height:10px;border-radius:50%; background:rgba(160,170,200,.4);}
 
-/* Onboarding steps */
-.onboarding-step { display: none; }
-.onboarding-step.active { display: block; animation: fadeSlideIn 0.3s ease; }
-@keyframes fadeSlideIn { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:translateX(0); } }
-.step-indicator { display: flex; gap: 6px; margin-bottom: 28px; }
-.step-dot { height: 4px; border-radius: 2px; flex: 1; background: var(--primary-light); transition: background 0.3s ease; }
-.step-dot.done { background: var(--primary); }
+/* Stars (level 5+ at night) */
+.stars{ position:absolute; inset:0; opacity:0; transition:opacity 1.6s ease; pointer-events:none; z-index:1; }
+.night.lv5 .stars, .night.lv6 .stars{ opacity:1; }
+.star{ position:absolute; width:2px; height:2px; background:#fff; border-radius:50%; animation:twinkle 3s ease-in-out infinite; }
 
-/* ============================================================
-   HOME SCREEN
-============================================================ */
-.greeting-time { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-.greeting-name { font-size: 28px; font-weight: 700; line-height: 1.2; margin-bottom: 4px; }
-.greeting-sub  { font-size: 13px; color: var(--text-muted); }
+/* Clouds */
+.clouds{ position:absolute; inset:0; z-index:2; pointer-events:none; transition:opacity 1s; }
+.cloud{
+  position:absolute; background:rgba(255,255,255,.85); border-radius:50%;
+  filter:blur(1px); animation:drift linear infinite;
+}
+.cloud::before,.cloud::after{ content:''; position:absolute; background:inherit; border-radius:50%; }
+.cloud{ width:70px; height:24px; }
+.cloud::before{ width:38px; height:38px; top:-16px; left:10px; }
+.cloud::after{ width:30px; height:30px; top:-10px; left:38px; }
+.cloud.c1{ top:30px; left:-90px; animation-duration:46s; }
+.cloud.c2{ top:70px; left:-140px; animation-duration:64s; transform:scale(.8); opacity:.8; }
+.cloud.c3{ top:18px; left:-200px; animation-duration:80s; transform:scale(1.2); opacity:.6; }
 
-.ring-card { background: linear-gradient(145deg, #FFFCF9, #F8F0F5); text-align: center; padding: 28px 20px; }
-.ring-wrapper  { position: relative; width: 160px; height: 160px; margin: 0 auto 16px; }
-.ring-svg      { width: 160px; height: 160px; transform: rotate(-90deg); }
-.ring-bg       { fill: none; stroke: var(--primary-light); stroke-width: 10; }
-.ring-progress { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1), stroke 0.5s ease; }
-.ring-center   { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.ring-day      { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; line-height: 1; color: var(--text); }
-.ring-label    { font-size: 11px; color: var(--text-muted); margin-top: 3px; letter-spacing: 0.3px; }
+/* Parallax hills (background slower) */
+.hill{ position:absolute; left:-10%; right:-10%; border-radius:50% 50% 0 0; transition:background 1.6s ease; will-change:transform; }
+.hill.back{ bottom:78px; height:130px; background:rgba(123,175,142,.35); }
+.hill.mid{  bottom:54px; height:120px; background:rgba(123,175,142,.55); left:-30%; right:-20%; }
+.night .hill.back{ background:rgba(60,80,110,.6); }
+.night .hill.mid{ background:rgba(45,62,95,.7); }
+.evening .hill.back{ background:rgba(150,110,120,.5); }
+.evening .hill.mid{ background:rgba(120,85,100,.6); }
 
-.phase-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 600; margin-bottom: 8px; }
-.phase-menstrual  { background: var(--primary-light); color: var(--primary-dark); }
-.phase-follicular { background: var(--secondary-light); color: #7A5FA0; }
-.phase-ovulation  { background: var(--accent-light); color: #8A6A1A; }
-.phase-luteal     { background: linear-gradient(135deg, var(--primary-light), var(--secondary-light)); color: var(--primary-dark); }
+/* Ground / soil */
+.ground{
+  position:absolute; left:0; right:0; bottom:0; height:96px;
+  background:linear-gradient(180deg,#8FB97E 0%,#6E9A62 60%,#5C8453 100%);
+  border-radius:40% 40% 0 0 / 18px;
+  transition:background 1.6s ease; z-index:5;
+}
+.night .ground{ background:linear-gradient(180deg,#3B5547 0%,#2C4137 100%); }
+.evening .ground{ background:linear-gradient(180deg,#7E8A5E 0%,#5E6E48 100%); }
+.soil-patch{
+  position:absolute; bottom:60px; left:50%; transform:translateX(-50%);
+  width:120px; height:34px; background:#7A5B43; border-radius:50%;
+  box-shadow:0 6px 0 rgba(0,0,0,.05); z-index:6;
+}
 
-.next-period-text { font-size: 13px; color: var(--text-muted); }
-.next-period-text strong { color: var(--text); font-weight: 600; }
-.insight-text { font-size: 14px; line-height: 1.7; color: var(--text); }
+/* ---- The growing PLANT/TREE (center) — scales by level ---- */
+.plant{
+  position:absolute; bottom:78px; left:50%;
+  transform:translateX(-50%);
+  z-index:8;
+  transform-origin:bottom center;
+  transition:transform 1.2s var(--ease);
+  will-change:transform;
+}
+/* stem */
+.stem{
+  width:8px; height:60px; margin:0 auto;
+  background:linear-gradient(90deg,#6E9A62,#4F7A48);
+  border-radius:6px; transform-origin:bottom; animation:sway 6s ease-in-out infinite;
+}
+.trunk{
+  position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+  width:14px; height:0; background:linear-gradient(90deg,#8B6444,#6E4D34);
+  border-radius:8px; transition:height 1.2s var(--ease), width 1.2s var(--ease);
+  z-index:8;
+}
+.canopy{
+  position:absolute; left:50%; transform:translate(-50%,0) scale(0);
+  bottom:0; width:0; height:0; border-radius:50%;
+  background:radial-gradient(circle at 40% 35%, #8FC47E, #5E9450);
+  transition:all 1.2s var(--ease);
+  box-shadow:inset -10px -14px 24px rgba(0,0,0,.12);
+  animation:sway 7s ease-in-out infinite;
+  z-index:8;
+}
+.canopy::before,.canopy::after{
+  content:''; position:absolute; border-radius:50%;
+  background:radial-gradient(circle at 40% 35%, #95CC83, #6AA059);
+}
+.canopy::before{ width:60%; height:60%; top:-18%; left:6%; }
+.canopy::after{  width:55%; height:55%; top:-10%; right:4%; }
 
-.affirmation-card { background: linear-gradient(135deg, #F8EEFB 0%, #EDE6F6 100%); position: relative; overflow: hidden; }
-.affirmation-card::before { content: '❝'; position: absolute; top: 12px; right: 20px; font-size: 48px; color: rgba(200,182,226,0.3); line-height: 1; font-family: serif; }
-.affirmation-text { font-family: 'Playfair Display', serif; font-style: italic; font-size: 16px; line-height: 1.7; color: var(--text); }
-.affirmation-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; }
-.wisdom-card { background: linear-gradient(135deg, #F3E9D2 0%, #F8F3ED 100%); border-left: 3px solid var(--accent); }
+/* Glow for enchanted level */
+.tree-glow{
+  position:absolute; bottom:120px; left:50%; transform:translate(-50%,0);
+  width:0; height:0; border-radius:50%; opacity:0;
+  background:radial-gradient(circle, rgba(200,169,107,.55), transparent 70%);
+  transition:all 1.2s ease; z-index:7; pointer-events:none;
+}
 
-/* ============================================================
-   CALENDAR SCREEN
-============================================================ */
-.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.cal-month-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; }
-.cal-nav-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--bg-card); box-shadow: var(--shadow-sm); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text); transition: all 0.2s ease; }
-.cal-nav-btn:active { transform: scale(0.92); background: var(--primary-light); }
-.cal-weekdays { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-bottom: 8px; }
-.cal-weekday  { text-align: center; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 0; }
-.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
-.cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 13px; font-weight: 500; cursor: pointer; position: relative; transition: all 0.15s ease; min-height: 40px; color: var(--text); }
-.cal-day:active { transform: scale(0.88); }
-.cal-day.empty  { cursor: default; }
-.cal-day.today  { box-shadow: 0 0 0 2px var(--text); font-weight: 700; }
-.cal-day.period { background: var(--primary); color: white; }
-.cal-day.fertile { background: var(--primary-light); color: var(--primary-dark); }
-.cal-day.ovulation { background: var(--accent); color: white; }
-.cal-day.predicted-period { background: rgba(216,167,177,0.25); color: var(--primary-dark); border: 1px dashed var(--primary); }
-.cal-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
-.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); }
-.legend-dot  { width: 10px; height: 10px; border-radius: 50%; }
+/* Single sprout (level 1) */
+.sprout{ position:absolute; bottom:90px; left:50%; transform:translateX(-50%); z-index:8; }
+.sprout .leaf-s{
+  position:absolute; bottom:0; width:18px; height:12px;
+  background:#7BAF8E; border-radius:0 80% 0 80%;
+  transform-origin:bottom right; animation:sway 5s ease-in-out infinite;
+}
+.sprout .leaf-s.l{ left:-16px; transform:scaleX(-1); border-radius:0 80% 0 80%; }
+.sprout .leaf-s.r{ left:2px; }
 
-/* ============================================================
-   TRACKER SCREEN
-============================================================ */
-.tracker-section-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-.pill-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-.pill { padding: 9px 16px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 500; cursor: pointer; border: 1.5px solid rgba(216,167,177,0.35); background: var(--bg-card); color: var(--text-muted); transition: all 0.2s ease; min-height: 38px; display: flex; align-items: center; }
-.pill:active { transform: scale(0.95); }
-.pill.selected { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(216,167,177,0.4); }
-.mood-grid { display: flex; gap: 10px; flex-wrap: wrap; }
-.mood-btn { flex: 1; min-width: 60px; padding: 10px 6px; border-radius: var(--radius-sm); border: 1.5px solid rgba(216,167,177,0.2); background: var(--bg-card); cursor: pointer; text-align: center; transition: all 0.2s ease; font-size: 13px; color: var(--text-muted); }
-.mood-btn:active { transform: scale(0.93); }
-.mood-btn .mood-emoji { display: block; font-size: 26px; margin-bottom: 4px; line-height: 1; }
-.mood-btn.selected { background: var(--secondary-light); border-color: var(--secondary); color: var(--text); box-shadow: 0 4px 12px rgba(200,182,226,0.3); }
-.wellness-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-.wellness-card-inner { background: var(--bg); border-radius: var(--radius-sm); padding: 16px; border: 1px solid rgba(216,167,177,0.12); }
-.wellness-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
-.water-glasses { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
-.glass-btn { font-size: 18px; cursor: pointer; transition: transform 0.15s ease; filter: grayscale(1) opacity(0.35); background: none; border: none; padding: 2px; min-width: 26px; min-height: 26px; display: flex; align-items: center; justify-content: center; }
-.glass-btn.filled { filter: none; }
-.glass-btn:active { transform: scale(0.85); }
-.water-label { font-size: 11px; color: var(--text-muted); }
-.water-progress { height: 4px; background: var(--primary-light); border-radius: 2px; overflow: hidden; margin-top: 8px; }
-.water-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-dark)); border-radius: 2px; transition: width 0.4s cubic-bezier(0.34,1.56,0.64,1); }
-.sleep-value   { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; }
-.sleep-unit    { font-size: 12px; color: var(--text-muted); }
-.sleep-quality { font-size: 12px; font-weight: 600; margin-top: 6px; padding: 3px 8px; border-radius: var(--radius-pill); display: inline-block; }
-.sleep-quality.restful { background: #E8F5E9; color: #4CAF50; }
-.sleep-quality.fair    { background: var(--accent-light); color: #8A6A1A; }
-.sleep-quality.low     { background: #FBE8E8; color: #C05050; }
-.sleep-stepper { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-.save-bar { position: sticky; bottom: 0; background: linear-gradient(to top, var(--bg) 60%, transparent); padding: 16px 0 8px; margin-top: 8px; }
+/* Flowers, scattered — appear by level */
+.flower{
+  position:absolute; bottom:74px; width:14px; height:14px;
+  opacity:0; transform:scale(0); transform-origin:bottom center;
+  transition:opacity .8s, transform .8s var(--ease);
+  z-index:7;
+}
+.flower .petal{ position:absolute; inset:0; border-radius:50% 50% 50% 0; transform:rotate(45deg); }
+.flower::after{ content:''; position:absolute; top:4px; left:4px; width:6px; height:6px; background:var(--accent); border-radius:50%; z-index:2; }
+.flower .stalk{ position:absolute; top:12px; left:6px; width:2px; height:18px; background:#5E9450; }
 
-/* ============================================================
-   INSIGHTS SCREEN
-============================================================ */
-.insight-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-.insight-stat-card { background: var(--bg-card); border-radius: var(--radius-sm); padding: 18px 16px; box-shadow: var(--shadow-sm); }
-.insight-stat-icon  { font-size: 24px; margin-bottom: 8px; }
-.insight-stat-value { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 4px; }
-.insight-stat-label { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
-.insight-full-card  { display: flex; align-items: flex-start; gap: 14px; background: var(--bg-card); border-radius: var(--radius-sm); padding: 16px; box-shadow: var(--shadow-sm); margin-bottom: 10px; }
-.insight-icon-circle { width: 40px; height: 40px; min-width: 40px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 18px; }
-.insight-text-block .insight-card-title  { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
-.insight-text-block .insight-card-detail { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
-.empty-state { text-align: center; padding: 40px 24px; background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
-.empty-state-icon  { font-size: 48px; margin-bottom: 16px; display: block; }
-.empty-state-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-.empty-state-text  { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+/* Stone path (level 3+) */
+.path{ position:absolute; bottom:8px; left:50%; transform:translateX(-50%); display:flex; gap:6px; opacity:0; transition:opacity 1s; z-index:6; }
+.path .stone{ width:16px; height:10px; background:#CdBfA8; border-radius:50%; box-shadow:inset 0 -2px 0 rgba(0,0,0,.08); }
 
-.history-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 16px 20px; background: var(--bg-card); border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); margin-bottom: 10px; transition: background 0.2s ease; }
-.history-toggle:active { background: var(--primary-light); }
-.history-toggle-title { font-weight: 600; font-size: 14px; }
-.history-chevron { font-size: 12px; color: var(--text-muted); transition: transform 0.3s ease; }
-.history-chevron.open { transform: rotate(180deg); }
-.history-body { display: none; background: var(--bg-card); border-radius: 0 0 var(--radius-sm) var(--radius-sm); padding: 0 20px 16px; margin-top: -8px; box-shadow: var(--shadow-sm); }
-.history-body.open { display: block; }
-.history-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(216,167,177,0.1); font-size: 13px; }
-.history-row:last-child { border-bottom: none; }
-.history-cycle-num { font-weight: 700; color: var(--primary-dark); min-width: 24px; }
+/* Stream / waterfall (level 5+/6) */
+.stream{
+  position:absolute; bottom:0; right:18px; width:60px; height:90px;
+  opacity:0; transition:opacity 1s; z-index:6; overflow:hidden; border-radius:0 0 12px 12px;
+}
+.stream .water{ position:absolute; inset:0; background:linear-gradient(180deg,#9FD7F2,#6FB7D8); animation:flow 1.2s linear infinite; background-size:100% 18px; }
 
-/* ============================================================
-   PROFILE SCREEN
-============================================================ */
-.profile-avatar { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-light), var(--secondary-light)); display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 20px; box-shadow: var(--shadow); }
-.profile-privacy { text-align: center; font-size: 11px; color: var(--text-light); margin-top: 24px; padding: 12px; background: rgba(216,167,177,0.08); border-radius: var(--radius-sm); line-height: 1.6; }
-.profile-email-tag { background: var(--secondary-light); color: #7A5FA0; border-radius: var(--radius-pill); padding: 4px 12px; font-size: 12px; font-weight: 600; display: inline-block; margin-top: 6px; }
+/* Critters: butterflies (lv3+), birds (lv4+), fireflies (lv3+ night), petals on level-up */
+.critter{ position:absolute; z-index:9; pointer-events:none; }
+.butterfly{ font-size:16px; top:120px; left:-30px; opacity:0; }
+.lv3 .butterfly, .lv4 .butterfly, .lv5 .butterfly, .lv6 .butterfly{ opacity:1; animation:flutter 14s linear infinite; }
+.bird{ font-size:15px; top:60px; left:-40px; opacity:0; }
+.lv4 .bird, .lv5 .bird, .lv6 .bird{ opacity:1; animation:flyAcross 18s linear infinite; }
+.firefly{ position:absolute; width:5px; height:5px; border-radius:50%; background:#FFE6A0; box-shadow:0 0 8px 3px rgba(255,230,160,.7); opacity:0; z-index:9; }
+.night.lv3 .firefly,.night.lv4 .firefly,.night.lv5 .firefly,.night.lv6 .firefly{ animation:floatFire 9s ease-in-out infinite; }
 
-/* ============================================================
-   CAL SHEET
-============================================================ */
-.cal-sheet-date { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; margin-bottom: 6px; }
-.cal-sheet-info  { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
-.cal-action-btn  { display: flex; align-items: center; gap: 12px; width: 100%; padding: 16px; border-radius: var(--radius-sm); border: 1.5px solid rgba(216,167,177,0.2); background: var(--bg); cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 10px; transition: all 0.2s ease; min-height: 52px; }
-.cal-action-btn:active { transform: scale(0.98); background: var(--primary-light); }
-.cal-action-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; background: var(--primary-light); }
+/* Rain & rainbow (weather) */
+.rain{ position:absolute; inset:0; opacity:0; transition:opacity 1s; z-index:11; pointer-events:none; overflow:hidden; }
+.rain.on{ opacity:1; }
+.drop{ position:absolute; top:-20px; width:2px; height:16px; background:linear-gradient(rgba(255,255,255,.1),rgba(190,215,235,.8)); animation:fall linear infinite; }
+.rainbow{
+  position:absolute; bottom:60px; left:50%; transform:translateX(-50%);
+  width:240px; height:120px; border-radius:240px 240px 0 0;
+  border:8px solid; border-bottom:none; opacity:0; transition:opacity 1.4s; z-index:4;
+  border-image:linear-gradient(90deg,#ff8e8e,#ffd28e,#fff58e,#9be88e,#8ec5ff,#c8b6e2) 1;
+  filter:saturate(.9);
+}
+.rainbow.on{ opacity:.7; }
 
-/* Confirm modal */
-.confirm-overlay { position: fixed; inset: 0; background: rgba(58,58,58,0.5); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
-.confirm-overlay.visible { opacity: 1; pointer-events: all; }
-.confirm-box { background: var(--bg-card); border-radius: var(--radius); padding: 28px 24px; width: 100%; max-width: 340px; box-shadow: var(--shadow-lg); transform: scale(0.92); transition: transform 0.25s ease; text-align: center; }
-.confirm-overlay.visible .confirm-box { transform: scale(1); }
-.confirm-icon  { font-size: 40px; margin-bottom: 16px; display: block; }
-.confirm-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; margin-bottom: 8px; }
-.confirm-text  { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6; }
-.confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* Weather dimming overlay */
+.weather-veil{ position:absolute; inset:0; background:rgba(80,90,110,0); transition:background 1.2s; z-index:10; pointer-events:none; }
+.garden-stage.w-cloudy .weather-veil{ background:rgba(90,95,110,.18); }
+.garden-stage.w-rainy .weather-veil{ background:rgba(70,80,100,.3); }
+
+/* Garden HUD overlay (level banner) */
+.garden-hud{
+  position:absolute; left:14px; bottom:14px; right:14px; z-index:14;
+  background:rgba(255,255,255,.78); backdrop-filter:blur(8px);
+  border-radius:16px; padding:10px 14px; box-shadow:var(--shadow-sm);
+}
+.garden-hud .lvl-name{ font-family:'Playfair Display',serif; font-size:16px; font-weight:600; }
+.garden-hud .xp{ font-size:12px; color:var(--text-light); }
+.xp-bar{ height:7px; border-radius:6px; background:rgba(123,175,142,.2); margin-top:6px; overflow:hidden; }
+.xp-bar > span{ display:block; height:100%; background:linear-gradient(90deg,var(--primary),var(--accent)); border-radius:6px; transition:width 1s var(--ease); }
+
+.weather-badge{
+  position:absolute; top:12px; left:12px; z-index:14;
+  background:rgba(255,255,255,.8); backdrop-filter:blur(8px);
+  padding:7px 12px; border-radius:999px; box-shadow:var(--shadow-sm);
+  font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px;
+}
+.daynight-badge{
+  position:absolute; top:12px; right:12px; z-index:14;
+  background:rgba(255,255,255,.8); backdrop-filter:blur(8px);
+  padding:7px 12px; border-radius:999px; box-shadow:var(--shadow-sm);
+  font-size:13px; font-weight:500;
+}
+
+/* Zone hotspots inside full garden */
+.zone-dot{
+  position:absolute; z-index:13; width:46px; height:46px; border-radius:50%;
+  background:rgba(255,255,255,.85); box-shadow:var(--shadow-sm);
+  display:flex; align-items:center; justify-content:center; font-size:22px;
+  transition:transform .25s var(--ease); cursor:pointer;
+}
+.zone-dot:active{ transform:scale(.9); }
+.zone-dot .ring{ position:absolute; inset:-4px; border-radius:50%; border:2.5px solid var(--primary); opacity:.6; }
+
+/* Level-up petal burst */
+.petal-burst{ position:absolute; inset:0; z-index:30; pointer-events:none; overflow:hidden; }
+.petal-burst .pt{ position:absolute; font-size:18px; animation:petalFall 2.6s ease-in forwards; }
+
+/* ---------- 5. COMPANION ---------- */
+.companion-sprite{
+  position:absolute; bottom:96px; left:24px; z-index:12;
+  font-size:34px; animation:bob 3.5s ease-in-out infinite;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.15));
+}
+.companion-card{ display:flex; gap:12px; align-items:center; }
+.companion-card .av{ font-size:38px; flex:none; animation:bob 3.5s ease-in-out infinite; }
+
+/* ---------- 6. COMPONENTS ---------- */
+/* Greeting block */
+.greeting h1{ font-size:28px; margin-bottom:2px; }
+.greeting .sub{ color:var(--text-light); font-size:14px; }
+
+.affirm-card{ border:1.5px solid rgba(200,169,107,.5); background:linear-gradient(180deg,#FFFDF7,#FBF6EA); }
+.affirm-card .q{ font-family:'Playfair Display',serif; font-style:italic; font-size:17px; line-height:1.5; }
+
+/* Zone cards (habits) */
+.zone-card{ overflow:hidden; }
+.zone-head{ display:flex; align-items:center; gap:12px; }
+.zone-head .zemo{
+  width:46px; height:46px; border-radius:14px; flex:none;
+  display:flex; align-items:center; justify-content:center; font-size:24px;
+  background:rgba(123,175,142,.12);
+}
+.zone-head .ztitle{ flex:1; }
+.zone-head .ztitle b{ font-size:15.5px; }
+.zone-head .ztitle .zlvl{ font-size:12px; color:var(--text-light); }
+.zone-head .chev{ transition:transform .3s var(--ease); color:var(--text-light); }
+.zone-card.open .chev{ transform:rotate(180deg); }
+.zmeter{ height:6px; border-radius:6px; background:rgba(0,0,0,.06); margin-top:8px; overflow:hidden; }
+.zmeter > span{ display:block; height:100%; background:linear-gradient(90deg,var(--primary),var(--accent)); transition:width .8s var(--ease); }
+.zone-body{ max-height:0; opacity:0; overflow:hidden; transition:max-height .4s var(--ease), opacity .3s, margin .3s; }
+.zone-card.open .zone-body{ max-height:600px; opacity:1; margin-top:14px; }
+
+.habit{
+  display:flex; align-items:center; gap:12px; padding:11px 0;
+  border-top:1px solid #F0EBE0;
+}
+.habit:first-child{ border-top:none; }
+.check{
+  width:26px; height:26px; border-radius:50%; flex:none;
+  border:2px solid var(--primary); position:relative;
+  transition:background .25s, transform .2s;
+}
+.check.done{ background:var(--primary); }
+.check.done::after{ content:'✓'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; }
+.check:active{ transform:scale(.85); }
+.habit-info{ flex:1; }
+.habit-info .hn{ font-size:14.5px; font-weight:500; }
+.habit-info.done .hn{ text-decoration:line-through; color:var(--text-light); }
+.habit-info .hf{ font-size:11.5px; color:var(--text-light); }
+.streak-badge{ font-size:12px; color:var(--accent); font-weight:700; display:flex; align-items:center; gap:3px; flex:none; }
+.add-habit-row{ display:flex; gap:8px; margin-top:12px; }
+.add-habit-row .input{ flex:1; }
+.add-habit-row .freq{ width:auto; flex:none; }
+.mini-btn{ background:var(--primary); color:#fff; border-radius:10px; padding:0 14px; font-size:20px; font-weight:500; flex:none; box-shadow:var(--shadow-sm); }
+
+/* Insights */
+.insight{ display:flex; gap:12px; align-items:flex-start; }
+.insight .ico{ font-size:24px; flex:none; }
+.insight b{ font-size:22px; font-family:'Playfair Display',serif; }
+.story-card{ border:1.5px solid rgba(200,169,107,.5); background:linear-gradient(180deg,#FFFDF7,#FBF6EA); }
+.story-card p{ font-family:'Playfair Display',serif; font-style:italic; line-height:1.6; font-size:15.5px; }
+
+/* Sound drawer */
+.drawer-scrim{ position:fixed; inset:0; background:rgba(40,40,40,.4); opacity:0; pointer-events:none; transition:opacity .35s; z-index:60; }
+.drawer-scrim.open{ opacity:1; pointer-events:auto; }
+.drawer{
+  position:fixed; left:50%; bottom:0; transform:translate(-50%,100%);
+  width:100%; max-width:480px;
+  background:var(--card); border-radius:24px 24px 0 0;
+  padding:14px 20px calc(26px + env(safe-area-inset-bottom));
+  box-shadow:0 -10px 40px rgba(0,0,0,.18);
+  transition:transform .4s var(--ease); z-index:61;
+}
+.drawer.open{ transform:translate(-50%,0); }
+.drawer .grip{ width:42px; height:5px; border-radius:3px; background:#E0D9CC; margin:2px auto 16px; }
+.sound-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px; }
+.sound{
+  border-radius:16px; padding:14px 6px; text-align:center; background:var(--card-soft);
+  border:2px solid transparent; transition:border-color .2s, background .2s, transform .15s;
+}
+.sound:active{ transform:scale(.95); }
+.sound .se{ font-size:26px; }
+.sound .sl{ font-size:11px; color:var(--text-light); margin-top:4px; }
+.sound.on{ border-color:var(--primary); background:rgba(123,175,142,.12); }
+.vol-row{ display:flex; align-items:center; gap:12px; }
+input[type=range]{ -webkit-appearance:none; appearance:none; flex:1; height:6px; border-radius:6px; background:rgba(123,175,142,.25); }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:var(--primary); box-shadow:var(--shadow-sm); cursor:pointer; }
+input[type=range]::-moz-range-thumb{ width:20px; height:20px; border:none; border-radius:50%; background:var(--primary); cursor:pointer; }
+.active-sound-label{ font-size:13px; color:var(--text-light); margin-top:10px; text-align:center; }
+
+/* Profile */
+.profile-head{ text-align:center; padding:8px 0 14px; }
+.profile-head .av{ font-size:56px; animation:bob 3.5s ease-in-out infinite; }
+.profile-head h2{ font-size:24px; margin-top:6px; }
+.stat-row{ display:flex; gap:12px; }
+.stat-row .card{ flex:1; text-align:center; margin-bottom:0; }
+.stat-row .card b{ font-size:26px; font-family:'Playfair Display',serif; display:block; }
+.stat-row .card span{ font-size:12px; color:var(--text-light); }
+.zone-toggle{ display:flex; align-items:center; justify-content:space-between; padding:11px 0; border-top:1px solid #F0EBE0; }
+.zone-toggle:first-child{ border-top:none; }
+.toggle{ width:46px; height:27px; border-radius:999px; background:#E0D9CC; position:relative; transition:background .25s; flex:none; }
+.toggle::after{ content:''; position:absolute; top:3px; left:3px; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:var(--shadow-sm); transition:transform .25s var(--ease); }
+.toggle.on{ background:var(--primary); }
+.toggle.on::after{ transform:translateX(19px); }
+.foot-note{ text-align:center; font-size:12px; color:var(--text-light); margin:16px 0 8px; }
 
 /* Toast */
-.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px); background: var(--text); color: white; padding: 12px 20px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 500; z-index: 400; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); max-width: 280px; text-align: center; pointer-events: none; }
-.toast.show { transform: translateX(-50%) translateY(0); }
+.toast{
+  position:fixed; bottom:110px; left:50%; transform:translate(-50%,20px);
+  background:var(--text); color:#fff; padding:11px 18px; border-radius:999px;
+  font-size:13.5px; opacity:0; pointer-events:none; transition:all .35s var(--ease); z-index:90;
+  box-shadow:var(--shadow); max-width:90%; text-align:center;
+}
+.toast.show{ opacity:1; transform:translate(-50%,0); }
 
-/* Divider */
-.divider { height: 1px; background: rgba(216,167,177,0.15); margin: 20px 0; }
-::-webkit-scrollbar { width: 0; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+/* Zone detail modal */
+.modal-scrim{ position:fixed; inset:0; background:rgba(40,40,40,.45); opacity:0; pointer-events:none; transition:opacity .3s; z-index:70; display:flex; align-items:center; justify-content:center; padding:24px; }
+.modal-scrim.open{ opacity:1; pointer-events:auto; }
+.modal{ background:var(--card); border-radius:22px; padding:22px; width:100%; max-width:360px; transform:scale(.92); transition:transform .3s var(--ease); box-shadow:var(--shadow); }
+.modal-scrim.open .modal{ transform:scale(1); }
+
+/* ---------- 7. KEYFRAMES ---------- */
+@keyframes sway{ 0%,100%{ transform:rotate(-2deg);} 50%{ transform:rotate(2deg);} }
+@keyframes bob{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-6px);} }
+@keyframes shake{ 0%,100%{transform:translateX(0);} 20%{transform:translateX(-9px);} 40%{transform:translateX(9px);} 60%{transform:translateX(-6px);} 80%{transform:translateX(6px);} }
+@keyframes drift{ from{ transform:translateX(0);} to{ transform:translateX(560px);} }
+@keyframes twinkle{ 0%,100%{opacity:.2;} 50%{opacity:1;} }
+@keyframes flow{ from{ background-position:0 0;} to{ background-position:0 18px;} }
+@keyframes fall{ from{ transform:translateY(-20px);} to{ transform:translateY(380px);} }
+@keyframes flutter{
+  0%{ transform:translate(0,0) rotate(0);} 25%{ transform:translate(120px,-30px) rotate(10deg);}
+  50%{ transform:translate(240px,10px) rotate(-8deg);} 75%{ transform:translate(360px,-20px) rotate(6deg);}
+  100%{ transform:translate(480px,0) rotate(0); opacity:0;}
+}
+@keyframes flyAcross{ 0%{ transform:translate(0,0);} 50%{ transform:translate(260px,-18px);} 100%{ transform:translate(520px,0); opacity:0;} }
+@keyframes floatFire{ 0%,100%{ transform:translate(0,0); opacity:0;} 25%{opacity:1;} 50%{ transform:translate(20px,-22px); opacity:.9;} 75%{opacity:1;} }
+@keyframes petalFall{ 0%{ transform:translateY(-20px) rotate(0); opacity:1;} 100%{ transform:translateY(380px) rotate(360deg); opacity:0;} }
+@keyframes pop{ 0%{transform:scale(0);} 70%{transform:scale(1.15);} 100%{transform:scale(1);} }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.2s !important; }
+}
+
+/* ---------- 8. RESPONSIVE ---------- */
+@media (min-width:520px){
+  .garden-stage{ height:400px; }
+}
+
+/* ── ONBOARDING OVERLAY ── */
+#ob-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  background: linear-gradient(160deg, #1a2e1e 0%, #0e1a10 60%, #1a2018 100%);
+  overflow-y: auto; display: none;
+}
+#ob-overlay.show { display: block; }
+.ob-screen {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 4rem 1.5rem 3rem; gap: 1.25rem; text-align: center;
+  opacity: 0; transform: translateY(24px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+.ob-screen.active { opacity: 1; transform: translateY(0); }
+.ob-screen.exit   { opacity: 0; transform: translateY(-24px); }
+.ob-screen.hidden { display: none; }
+.ob-dots {
+  display: flex; gap: 8px; align-items: center;
+  position: fixed; top: 1.25rem; left: 50%; transform: translateX(-50%);
+  z-index: 9001;
+}
+.ob-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all 0.3s; }
+.ob-dot.active { background: #7BAF8E; width: 22px; border-radius: 4px; }
+.ob-title { font-size: 1.85rem; font-weight: 700; color: #e8f5ee; line-height: 1.2; max-width: 320px; }
+.ob-subtitle { font-size: 0.95rem; color: #8aab8e; line-height: 1.6; max-width: 300px; }
+.ob-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(123,175,142,0.18); color: #90c8a0; padding: 6px 14px; border-radius: 99px; font-size: 0.82rem; font-weight: 600; border: 1px solid rgba(123,175,142,0.25); }
+.ob-field { display: flex; flex-direction: column; gap: 7px; width: 100%; max-width: 320px; }
+.ob-field label { font-size: 0.82rem; font-weight: 600; color: #7BAF8E; text-align: left; text-transform: uppercase; letter-spacing: 0.05em; }
+.ob-input { width: 100%; padding: 13px 16px; border-radius: 12px; border: 1px solid rgba(123,175,142,0.25); background: rgba(255,255,255,0.05); font-size: 0.95rem; color: #e8f5ee; outline: none; transition: border-color 0.2s; }
+.ob-input:focus { border-color: #7BAF8E; background: rgba(255,255,255,0.08); }
+.ob-input::placeholder { color: rgba(255,255,255,0.2); }
+.ob-companions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 340px; }
+.ob-companion { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 14px 8px; border-radius: 12px; border: 1px solid rgba(123,175,142,0.2); background: rgba(255,255,255,0.04); cursor: pointer; transition: all 0.2s; }
+.ob-companion:hover { border-color: rgba(123,175,142,0.5); background: rgba(123,175,142,0.08); }
+.ob-companion.selected { border-color: #7BAF8E; background: rgba(123,175,142,0.15); }
+.ob-companion .c-emoji { font-size: 1.9rem; }
+.ob-companion .c-name { font-weight: 600; font-size: 0.78rem; color: #c8e0cc; }
+.ob-companion .c-vibe { font-size: 0.68rem; color: #6a8a6e; }
+.ob-zones { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width: 340px; }
+.ob-zone { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(123,175,142,0.2); background: rgba(255,255,255,0.04); cursor: pointer; transition: all 0.2s; }
+.ob-zone:hover { border-color: rgba(123,175,142,0.5); background: rgba(123,175,142,0.08); }
+.ob-zone.selected { border-color: #7BAF8E; background: rgba(123,175,142,0.15); }
+.ob-zone .z-icon { font-size: 1.3rem; flex-shrink: 0; }
+.ob-zone .z-name { font-weight: 600; font-size: 0.85rem; color: #c8e0cc; display: block; text-align: left; }
+.ob-zone .z-desc { font-size: 0.7rem; color: #6a8a6e; display: block; text-align: left; }
+.ob-cta { width: 100%; max-width: 320px; padding: 14px; border-radius: 12px; border: none; background: linear-gradient(135deg, #7BAF8E 0%, #4d8a65 100%); color: white; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: transform 0.15s, opacity 0.2s; letter-spacing: 0.02em; }
+.ob-cta:hover { transform: translateY(-1px); }
+.ob-cta:active { transform: scale(0.98); }
+.ob-cta:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.ob-err { color: #f5a8a8; font-size: 0.82rem; max-width: 320px; }
+.ob-link { font-size: 0.82rem; color: #6a8a6e; background: none; border: none; cursor: pointer; }
+.ob-link a, .ob-link span { color: #7BAF8E; font-weight: 600; cursor: pointer; }
+.ob-garden-preview { display: flex; gap: 12px; justify-content: center; align-items: flex-end; padding: 1.5rem; background: rgba(255,255,255,0.05); border-radius: 16px; border: 1px solid rgba(123,175,142,0.2); max-width: 280px; }
+.confetti-p { position: absolute; width: 8px; height: 8px; border-radius: 2px; animation: cfall 2.5s ease-in forwards; pointer-events: none; }
+@keyframes cfall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(600px) rotate(720deg);opacity:0} }
+
 </style>
 </head>
 <body>
+
+<!-- ═══════════ ONBOARDING OVERLAY ═══════════ -->
+<div id="ob-overlay">
+  <div class="ob-dots" id="ob-dots">
+    <div class="ob-dot active"></div>
+    <div class="ob-dot"></div>
+    <div class="ob-dot"></div>
+    <div class="ob-dot"></div>
+    <div class="ob-dot"></div>
+  </div>
+
+  <!-- Step 0: Welcome -->
+  <div class="ob-screen active" id="ob-0">
+    <svg width="160" height="140" viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="160" height="140" rx="16" fill="rgba(123,175,142,0.08)"/>
+      <ellipse cx="80" cy="130" rx="70" ry="18" fill="rgba(123,175,142,0.15)"/>
+      <rect x="76" y="70" width="8" height="44" rx="4" fill="#4d8a65"/>
+      <ellipse cx="80" cy="67" rx="20" ry="16" fill="#7BAF8E"/>
+      <ellipse cx="67" cy="77" rx="13" ry="11" fill="#4d8a65"/>
+      <ellipse cx="93" cy="77" rx="13" ry="11" fill="#4d8a65"/>
+      <ellipse cx="80" cy="58" rx="14" ry="13" fill="#90c8a0"/>
+      <rect x="42" y="92" width="5" height="28" rx="2.5" fill="#4d8a65"/>
+      <circle cx="44.5" cy="89" r="9" fill="rgba(245,200,160,0.7)"/>
+      <rect x="112" y="95" width="5" height="25" rx="2.5" fill="#4d8a65"/>
+      <circle cx="114.5" cy="92" r="8" fill="rgba(168,212,240,0.7)"/>
+      <circle cx="134" cy="22" r="14" fill="rgba(245,216,120,0.5)"/>
+      <circle cx="134" cy="22" r="9" fill="rgba(245,200,64,0.6)"/>
+    </svg>
+    <div class="ob-badge">🌱 Your wellness garden awaits</div>
+    <h1 class="ob-title">Welcome to Soul Garden</h1>
+    <p class="ob-subtitle">A living space that grows with you. Track habits, tend your zones, and watch your inner garden bloom.</p>
+    <button class="ob-cta" onclick="obNext()">Begin my journey &rarr;</button>
+    <p class="ob-link">Already have a garden? <span onclick="obSkipToSignIn()">Sign in</span></p>
+  </div>
+
+  <!-- Step 1: Name + account -->
+  <div class="ob-screen hidden" id="ob-1">
+    <div style="font-size:2.8rem">🌻</div>
+    <h1 class="ob-title">What do we call you?</h1>
+    <p class="ob-subtitle">Every garden needs a gardener's name.</p>
+    <div class="ob-field">
+      <label>Your name</label>
+      <input class="ob-input" id="ob-name" type="text" placeholder="e.g. Anushka" autocomplete="name"/>
+    </div>
+    <div class="ob-field">
+      <label>Email address</label>
+      <input class="ob-input" id="ob-email" type="email" placeholder="you@example.com" autocomplete="email"/>
+    </div>
+    <div class="ob-field">
+      <label>Password</label>
+      <input class="ob-input" id="ob-pass" type="password" placeholder="At least 6 characters" autocomplete="new-password"/>
+    </div>
+    <div class="ob-err" id="ob-err-1" style="display:none"></div>
+    <button class="ob-cta" id="ob-btn-1" onclick="obStep1()">Continue &rarr;</button>
+  </div>
+
+  <!-- Step 2: Companion -->
+  <div class="ob-screen hidden" id="ob-2">
+    <div style="font-size:2.8rem">🤝</div>
+    <h1 class="ob-title">Choose your companion</h1>
+    <p class="ob-subtitle">Your companion will cheer you on every day.</p>
+    <div class="ob-companions">
+      <div class="ob-companion selected" data-c="fox" onclick="obPickComp(this)">
+        <span class="c-emoji">🦊</span><span class="c-name">Fox</span><span class="c-vibe">Bold &amp; clever</span>
+      </div>
+      <div class="ob-companion" data-c="deer" onclick="obPickComp(this)">
+        <span class="c-emoji">🦌</span><span class="c-name">Deer</span><span class="c-vibe">Gentle &amp; wise</span>
+      </div>
+      <div class="ob-companion" data-c="bee" onclick="obPickComp(this)">
+        <span class="c-emoji">🐝</span><span class="c-name">Bee</span><span class="c-vibe">Diligent &amp; sweet</span>
+      </div>
+      <div class="ob-companion" data-c="owl" onclick="obPickComp(this)">
+        <span class="c-emoji">🦉</span><span class="c-name">Owl</span><span class="c-vibe">Thoughtful &amp; calm</span>
+      </div>
+      <div class="ob-companion" data-c="butterfly" onclick="obPickComp(this)">
+        <span class="c-emoji">🦋</span><span class="c-name">Butterfly</span><span class="c-vibe">Free &amp; joyful</span>
+      </div>
+      <div class="ob-companion" data-c="turtle" onclick="obPickComp(this)">
+        <span class="c-emoji">🐢</span><span class="c-name">Turtle</span><span class="c-vibe">Steady &amp; grounded</span>
+      </div>
+    </div>
+    <button class="ob-cta" onclick="obNext()">This one feels right &rarr;</button>
+  </div>
+
+  <!-- Step 3: Zones -->
+  <div class="ob-screen hidden" id="ob-3">
+    <div style="font-size:2.8rem">🌿</div>
+    <h1 class="ob-title">Which zones matter most?</h1>
+    <p class="ob-subtitle">Pick what you want to nurture. Add more later anytime.</p>
+    <div class="ob-zones">
+      <div class="ob-zone selected" data-z="wellness" onclick="obToggleZone(this)">
+        <span class="z-icon">🌿</span><div><span class="z-name">Wellness</span><span class="z-desc">Body &amp; health</span></div>
+      </div>
+      <div class="ob-zone" data-z="wisdom" onclick="obToggleZone(this)">
+        <span class="z-icon">📚</span><div><span class="z-name">Wisdom</span><span class="z-desc">Learning &amp; growth</span></div>
+      </div>
+      <div class="ob-zone" data-z="selflove" onclick="obToggleZone(this)">
+        <span class="z-icon">🌸</span><div><span class="z-name">Self-love</span><span class="z-desc">Care &amp; gratitude</span></div>
+      </div>
+      <div class="ob-zone" data-z="peace" onclick="obToggleZone(this)">
+        <span class="z-icon">🕊</span><div><span class="z-name">Peace</span><span class="z-desc">Mindfulness &amp; calm</span></div>
+      </div>
+      <div class="ob-zone" data-z="creativity" onclick="obToggleZone(this)">
+        <span class="z-icon">🎨</span><div><span class="z-name">Creativity</span><span class="z-desc">Expression &amp; art</span></div>
+      </div>
+      <div class="ob-zone" data-z="strength" onclick="obToggleZone(this)">
+        <span class="z-icon">💪</span><div><span class="z-name">Strength</span><span class="z-desc">Discipline &amp; focus</span></div>
+      </div>
+    </div>
+    <button class="ob-cta" id="ob-btn-3" onclick="obStep3()">Plant these seeds &rarr;</button>
+  </div>
+
+  <!-- Step 4: Celebration -->
+  <div class="ob-screen hidden" id="ob-4" style="position:relative;overflow:hidden">
+    <div style="font-size:3.2rem;animation:breathe 1.5s ease-in-out infinite">🌱</div>
+    <h1 class="ob-title" id="ob-celeb-name">Your garden is ready!</h1>
+    <p class="ob-subtitle">Your companion is waiting. Your zones are planted. Now it's time to grow.</p>
+    <div class="ob-garden-preview" id="ob-preview">
+      <span style="font-size:2rem">🌱</span><span style="font-size:2.4rem">🌿</span><span style="font-size:2rem">🌸</span>
+    </div>
+    <button class="ob-cta" onclick="obEnterGarden()">Enter my garden 🌿</button>
+  </div>
+</div>
+
+
 <div id="app">
 
-  <!-- ===== SPLASH ===== -->
-  <div id="screen-splash" class="screen active">
-    <div class="splash-inner">
-      <span class="splash-moon">🌙</span>
-      <h1 class="splash-title serif">Luna</h1>
-      <p class="splash-tagline">Understand your cycle.<br>Connect with your body.</p>
-      <div class="splash-dots">
-        <div class="splash-dot"></div>
-        <div class="splash-dot"></div>
-        <div class="splash-dot"></div>
-      </div>
-      <button class="btn btn-primary" onclick="beginJourney()" style="font-size:16px;padding:16px 40px;">
-        Begin Your Journey
-      </button>
+  <!-- ===================== SPLASH ===================== -->
+  <section id="screen-splash" class="screen">
+    <div class="splash-leaf">🌿</div>
+    <h1>Soul Garden</h1>
+    <p class="tag">Grow your habits. Grow yourself.</p>
+    <div class="splash-btns">
+      <button class="btn" onclick="go('signin')">Sign In</button>
+      <button class="btn secondary" onclick="go('signup')">Create Account</button>
     </div>
-  </div>
+    <p class="splash-note">Your garden remembers you.</p>
+  </section>
 
-  <!-- ===== AUTH SCREEN ===== -->
-  <div id="screen-auth" class="screen">
-    <div class="auth-inner">
-      <div class="auth-logo">🌙</div>
-      <h1 class="auth-title serif">Luna</h1>
-      <p class="auth-tagline">Your cycle, your data, everywhere.</p>
+  <!-- ===================== SIGN UP ===================== -->
+  <section id="screen-signup" class="screen">
+    <div class="auth-wrap">
+      <div class="auth-card" id="signup-card">
+        <h2>Plant your garden</h2>
+        <p class="sub">A few details and your world begins to grow.</p>
 
-      <div class="auth-card">
-        <div class="auth-tabs">
-          <div class="auth-tab active" id="tab-signin" onclick="switchAuthTab('signin')">Sign In</div>
-          <div class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</div>
-        </div>
+        <label class="field"><span>Your Name</span>
+          <input class="input" id="su-name" type="text" placeholder="e.g. Anushka" autocomplete="name" />
+        </label>
+        <label class="field"><span>Email Address</span>
+          <input class="input" id="su-email" type="email" placeholder="you@example.com" autocomplete="email" />
+        </label>
+        <label class="field"><span>Password</span>
+          <input class="input" id="su-pass" type="password" placeholder="Choose a password" autocomplete="new-password" />
+        </label>
 
-        <!-- Sign In -->
-        <div class="auth-form active" id="form-signin">
-          <div id="signin-error" class="auth-error"></div>
-          <div id="signin-success" class="auth-success"></div>
-          <div class="form-group">
-            <label class="form-label">Email</label>
-            <input type="email" class="form-input" id="signin-email" placeholder="you@example.com" autocomplete="email">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Password</label>
-            <input type="password" class="form-input" id="signin-password" placeholder="Your password" autocomplete="current-password">
-          </div>
-          <button class="btn btn-primary btn-full" id="signin-btn" onclick="signIn()">Sign In</button>
-          <div class="auth-divider">or</div>
-          <button class="btn btn-secondary btn-full" onclick="signInWithGoogle()">
-            <span>🌐</span> Continue with Google
-          </button>
-          <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:16px;cursor:pointer;" onclick="sendPasswordReset()">Forgot password?</p>
-        </div>
+        <p class="section-title" style="margin-top:6px;">Choose Your Companion</p>
+        <div class="choice-grid" id="companion-grid"></div>
 
-        <!-- Sign Up -->
-        <div class="auth-form" id="form-signup">
-          <div id="signup-error" class="auth-error"></div>
-          <div id="signup-success" class="auth-success"></div>
-          <div class="form-group">
-            <label class="form-label">Your Name</label>
-            <input type="text" class="form-input" id="signup-name" placeholder="e.g. Anushka" autocomplete="name">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Email</label>
-            <input type="email" class="form-input" id="signup-email" placeholder="you@example.com" autocomplete="email">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Password</label>
-            <input type="password" class="form-input" id="signup-password" placeholder="Minimum 6 characters" autocomplete="new-password">
-          </div>
-          <button class="btn btn-primary btn-full" id="signup-btn" onclick="signUp()">Create Account</button>
-          <div class="auth-divider">or</div>
-          <button class="btn btn-secondary btn-full" onclick="signInWithGoogle()">
-            <span>🌐</span> Continue with Google
-          </button>
-        </div>
+        <p class="section-title">Choose Your First Goal Zone</p>
+        <div class="choice-grid" id="zone-grid"></div>
 
-        <div class="auth-footer">🔒 Your data is encrypted and stored securely.<br>Luna never sells or shares your information.</div>
+        <button class="btn" id="su-submit" onclick="createAccount()">Begin My Journey</button>
+        <p class="err-msg" id="su-err"></p>
+        <a class="link-btn" onclick="go('signin')">Already have a garden? Sign in →</a>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- ===== HOME SCREEN ===== -->
-  <div id="screen-home" class="screen">
-    <div class="screen-inner">
-      <div class="section-header" style="margin-bottom:24px;">
-        <p class="greeting-time" id="greeting-time">Good Morning</p>
-        <h1 class="greeting-name serif" id="greeting-name">Welcome</h1>
-        <p class="greeting-sub" id="greeting-sub">Here's your cycle overview for today.</p>
-      </div>
-      <div class="card ring-card">
-        <div class="ring-wrapper">
-          <svg class="ring-svg" viewBox="0 0 160 160">
-            <circle class="ring-bg" cx="80" cy="80" r="70"/>
-            <circle class="ring-progress" id="ring-progress" cx="80" cy="80" r="70"
-              stroke-dasharray="439.8" stroke-dashoffset="439.8" stroke="var(--primary)"/>
-          </svg>
-          <div class="ring-center">
-            <div class="ring-day" id="ring-day">—</div>
-            <div class="ring-label" id="ring-label">of 28 days</div>
-          </div>
-        </div>
-        <div id="phase-badge-wrap" style="text-align:center;margin-bottom:8px;">
-          <span class="phase-badge phase-menstrual" id="phase-badge">🌸 Loading…</span>
-        </div>
-        <p class="next-period-text text-center" id="next-period-text">Calculating…</p>
-      </div>
-      <div class="card card-accent" id="wellness-insight-card">
-        <p class="affirmation-label">✨ Wellness Insight</p>
-        <div class="card-title" id="wellness-insight-title">Phase Insight</div>
-        <p class="insight-text" id="wellness-insight-text">Loading your personalised insight…</p>
-      </div>
-      <div class="card affirmation-card">
-        <p class="affirmation-label">Today's Affirmation</p>
-        <p class="affirmation-text" id="daily-affirmation">"My body is wise and capable."</p>
-      </div>
-      <div class="card wisdom-card">
-        <p class="affirmation-label" style="color:var(--accent);">🌙 Cycle Wisdom</p>
-        <p class="insight-text" id="cycle-wisdom">Loading…</p>
+  <!-- ===================== SIGN IN ===================== -->
+  <section id="screen-signin" class="screen">
+    <div class="auth-wrap">
+      <div class="auth-card" id="signin-card">
+        <h2>Welcome back</h2>
+        <p class="sub">Your garden has been waiting for you.</p>
+        <label class="field"><span>Email Address</span>
+          <input class="input" id="si-email" type="email" placeholder="you@example.com" autocomplete="email" />
+        </label>
+        <label class="field"><span>Password</span>
+          <input class="input" id="si-pass" type="password" placeholder="Your password" autocomplete="current-password" />
+        </label>
+        <button class="btn" onclick="signIn()">Enter My Garden</button>
+        <p class="err-msg" id="si-err"></p>
+        <a class="link-btn" onclick="go('signup')">New here? Create your garden →</a>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- ===== CALENDAR SCREEN ===== -->
-  <div id="screen-calendar" class="screen">
-    <div class="screen-inner">
-      <div class="section-header">
-        <h1 class="section-title">Calendar</h1>
-        <p class="section-subtitle">Tap a date to log or view your cycle</p>
-      </div>
-      <div class="card" style="padding:20px 16px;">
-        <div class="cal-header">
-          <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
-          <span class="cal-month-title" id="cal-month-title">Month</span>
-          <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
-        </div>
-        <div class="cal-weekdays">
-          <div class="cal-weekday">Su</div><div class="cal-weekday">Mo</div>
-          <div class="cal-weekday">Tu</div><div class="cal-weekday">We</div>
-          <div class="cal-weekday">Th</div><div class="cal-weekday">Fr</div>
-          <div class="cal-weekday">Sa</div>
-        </div>
-        <div class="cal-grid" id="cal-grid"></div>
-        <div class="cal-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:var(--primary);"></div><span>Period</span></div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--primary-light);border:1px dashed var(--primary);"></div><span>Predicted</span></div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--accent);"></div><span>Ovulation</span></div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--primary-light);"></div><span>Fertile</span></div>
-          <div class="legend-item"><div class="legend-dot" style="background:transparent;box-shadow:0 0 0 2px var(--text);"></div><span>Today</span></div>
-        </div>
+  <!-- ===================== HOME ===================== -->
+  <section id="screen-home" class="screen has-nav">
+    <div class="topbar">
+      <div class="brand"><span class="leaf">🌿</span> Soul Garden</div>
+      <div class="topbar-right">
+        <button class="icon-btn" id="home-companion-ico" onclick="go('profile')">🦊</button>
+        <button class="icon-btn" onclick="openDrawer()">🔊</button>
       </div>
     </div>
-  </div>
-
-  <!-- ===== TRACKER SCREEN ===== -->
-  <div id="screen-tracker" class="screen">
-    <div class="screen-inner">
-      <div class="section-header">
-        <h1 class="section-title">Daily Tracker</h1>
-        <p class="section-subtitle" id="tracker-date-label">Today</p>
+    <div class="screen-scroll">
+      <div class="greeting">
+        <h1 id="greeting-text">Good Morning</h1>
+        <p class="sub" id="greeting-sub">Your garden is cheering for you.</p>
       </div>
+
+      <!-- Hero garden (compact) -->
+      <div id="home-garden-mount"></div>
+
+      <!-- Companion message -->
+      <div class="card companion-card">
+        <div class="av" id="home-comp-av">🦊</div>
+        <div>
+          <b id="home-comp-name">Fox</b>
+          <p class="muted" id="home-comp-msg" style="font-size:14px;">You showed up again. Your garden noticed.</p>
+        </div>
+      </div>
+
+      <!-- Daily affirmation -->
+      <div class="card affirm-card">
+        <p class="section-title" style="margin-bottom:6px;">Daily Affirmation</p>
+        <p class="q" id="affirmation">You are becoming who you are meant to be.</p>
+      </div>
+
+      <!-- Goal insight -->
       <div class="card">
-        <div class="tracker-section-title">🫀 Symptoms</div>
-        <div class="pill-grid" id="symptom-pills"></div>
-      </div>
-      <div class="card">
-        <div class="tracker-section-title">🌈 Mood</div>
-        <div class="mood-grid" id="mood-grid"></div>
-        <div style="margin-top:16px;">
-          <label class="form-label" for="mood-notes">Notes (optional)</label>
-          <textarea class="form-input" id="mood-notes" placeholder="How are you feeling today?"></textarea>
-        </div>
-      </div>
-      <div class="card">
-        <div class="tracker-section-title">💎 Wellness Log</div>
-        <div class="wellness-row">
-          <div class="wellness-card-inner">
-            <div class="wellness-title">💧 Water</div>
-            <div class="water-glasses" id="water-glasses"></div>
-            <div class="water-progress"><div class="water-fill" id="water-fill" style="width:0%"></div></div>
-            <div class="water-label" style="margin-top:4px;" id="water-label">0 / 8 glasses</div>
-          </div>
-          <div class="wellness-card-inner">
-            <div class="wellness-title">😴 Sleep</div>
-            <div class="sleep-value" id="sleep-value">7</div>
-            <div class="sleep-unit">hours</div>
-            <div class="sleep-stepper">
-              <button class="stepper-btn" onclick="changeSleep(-0.5)" style="font-size:18px;width:32px;height:32px;border-radius:50%;background:var(--bg);border:1px solid rgba(216,167,177,0.3);">−</button>
-              <button class="stepper-btn" onclick="changeSleep(0.5)"  style="font-size:18px;width:32px;height:32px;border-radius:50%;background:var(--bg);border:1px solid rgba(216,167,177,0.3);">+</button>
-            </div>
-            <div class="sleep-quality" id="sleep-quality-badge">Restful</div>
-          </div>
-        </div>
-      </div>
-      <div class="save-bar">
-        <button class="btn btn-primary btn-full" id="save-tracker-btn" onclick="saveTracker()">Save Today's Log ✓</button>
+        <p class="section-title" style="margin-bottom:6px;">Cycle Wisdom</p>
+        <p id="goal-insight" style="font-size:14.5px;">Small, repeated steps shape the deepest roots.</p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- ===== INSIGHTS SCREEN ===== -->
-  <div id="screen-insights" class="screen">
-    <div class="screen-inner">
-      <div class="section-header">
-        <h1 class="section-title">Insights</h1>
-        <p class="section-subtitle">Patterns from your cycle data</p>
-      </div>
-      <div id="insights-content"></div>
-      <div id="history-section" style="margin-top:24px;"></div>
-    </div>
-  </div>
-
-  <!-- ===== PROFILE SCREEN ===== -->
-  <div id="screen-profile" class="screen">
-    <div class="screen-inner">
-      <div class="section-header">
-        <h1 class="section-title">Profile</h1>
-        <p class="section-subtitle">Your personal cycle settings</p>
-      </div>
-      <div class="card" style="text-align:center;padding:28px;">
-        <div class="profile-avatar">🌙</div>
-        <div class="serif" style="font-size:22px;font-weight:600;" id="profile-display-name">—</div>
-        <div id="profile-email-display" class="profile-email-tag"></div>
-      </div>
-      <div class="card">
-        <div class="form-group">
-          <label class="form-label">Name</label>
-          <input type="text" class="form-input" id="profile-name" placeholder="Your name">
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Cycle Length</label>
-            <div class="number-stepper">
-              <button class="stepper-btn" onclick="adjustProfile('cycleLength',-1)">−</button>
-              <span class="stepper-value" id="profile-cycle-len">28</span>
-              <button class="stepper-btn" onclick="adjustProfile('cycleLength',1)">+</button>
-            </div>
-            <p style="font-size:11px;color:var(--text-muted);margin-top:5px;">days</p>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Period Duration</label>
-            <div class="number-stepper">
-              <button class="stepper-btn" onclick="adjustProfile('periodLength',-1)">−</button>
-              <span class="stepper-value" id="profile-period-len">5</span>
-              <button class="stepper-btn" onclick="adjustProfile('periodLength',1)">+</button>
-            </div>
-            <p style="font-size:11px;color:var(--text-muted);margin-top:5px;">days</p>
-          </div>
-        </div>
-        <button class="btn btn-primary btn-full" onclick="saveProfile()" style="margin-top:8px;">Save Changes</button>
-      </div>
-      <button class="btn btn-secondary btn-full" onclick="signOut()" style="margin-top:4px;">Sign Out</button>
-      <button class="btn btn-danger btn-full" onclick="confirmReset()" style="margin-top:8px;">Reset All Data</button>
-      <div class="profile-privacy">
-        🔒 Your data is encrypted and synced securely via Supabase.<br>
-        Accessible on any device when you sign in.
+  <!-- ===================== GARDEN (FULL) ===================== -->
+  <section id="screen-garden" class="screen has-nav">
+    <div class="topbar">
+      <div class="brand"><span class="leaf">🌿</span> The Garden</div>
+      <div class="topbar-right">
+        <button class="icon-btn" onclick="openDrawer()">🔊</button>
       </div>
     </div>
-  </div>
+    <div class="screen-scroll">
+      <div id="full-garden-mount"></div>
+      <p class="center muted" style="font-size:13px; margin-top:4px;">Tap a glowing zone to peek inside ✨</p>
+    </div>
+  </section>
 
-  <!-- ===== BOTTOM NAV ===== -->
-  <nav id="bottom-nav" style="display:none;">
-    <div class="nav-item active" onclick="navigate('home')"     id="nav-home">     <span class="nav-icon">🏠</span><span class="nav-label">Home</span></div>
-    <div class="nav-item"        onclick="navigate('calendar')" id="nav-calendar"> <span class="nav-icon">📅</span><span class="nav-label">Calendar</span></div>
-    <div class="nav-item"        onclick="navigate('tracker')"  id="nav-tracker">  <span class="nav-icon">💊</span><span class="nav-label">Track</span></div>
-    <div class="nav-item"        onclick="navigate('insights')" id="nav-insights"> <span class="nav-icon">📊</span><span class="nav-label">Insights</span></div>
-    <div class="nav-item"        onclick="navigate('profile')"  id="nav-profile">  <span class="nav-icon">👤</span><span class="nav-label">Profile</span></div>
+  <!-- ===================== HABITS ===================== -->
+  <section id="screen-habits" class="screen has-nav">
+    <div class="topbar">
+      <div class="brand"><span class="leaf">✅</span> Habits & Goals</div>
+    </div>
+    <div class="screen-scroll" id="habits-list"></div>
+  </section>
+
+  <!-- ===================== INSIGHTS ===================== -->
+  <section id="screen-insights" class="screen has-nav">
+    <div class="topbar">
+      <div class="brand"><span class="leaf">📊</span> Insights</div>
+    </div>
+    <div class="screen-scroll" id="insights-list"></div>
+  </section>
+
+  <!-- ===================== PROFILE ===================== -->
+  <section id="screen-profile" class="screen has-nav">
+    <div class="topbar">
+      <div class="brand"><span class="leaf">👤</span> Profile</div>
+    </div>
+    <div class="screen-scroll" id="profile-body"></div>
+  </section>
+
+  <!-- ===================== BOTTOM NAV ===================== -->
+  <nav class="bottom-nav" id="bottom-nav" style="display:none;">
+    <button class="nav-item" data-screen="home"     onclick="nav('home')"><span class="nav-ico">🏠</span>Home</button>
+    <button class="nav-item" data-screen="garden"   onclick="nav('garden')"><span class="nav-ico">🌿</span>Garden</button>
+    <button class="nav-item" data-screen="habits"   onclick="nav('habits')"><span class="nav-ico">✅</span>Habits</button>
+    <button class="nav-item" data-screen="insights" onclick="nav('insights')"><span class="nav-ico">📊</span>Insights</button>
+    <button class="nav-item" data-screen="profile"  onclick="nav('profile')"><span class="nav-ico">👤</span>Profile</button>
   </nav>
-</div><!-- end #app -->
 
-<!-- ===== ONBOARDING MODAL ===== -->
-<div id="onboarding-modal" class="modal-overlay">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="step-indicator">
-      <div class="step-dot done" id="sdot-1"></div>
-      <div class="step-dot" id="sdot-2"></div>
-      <div class="step-dot" id="sdot-3"></div>
+  <!-- ===================== SOUND DRAWER ===================== -->
+  <div class="drawer-scrim" id="drawer-scrim" onclick="closeDrawer()"></div>
+  <div class="drawer" id="drawer">
+    <div class="grip"></div>
+    <p class="section-title" style="text-align:center;">Ambient Sound</p>
+    <div class="sound-grid" id="sound-grid"></div>
+    <div class="vol-row">
+      <button class="icon-btn" id="mute-btn" onclick="toggleMute()" style="width:38px;height:38px;font-size:16px;box-shadow:none;background:var(--card-soft);">🔊</button>
+      <input type="range" id="vol" min="0" max="100" value="55" oninput="setVolume(this.value)" />
     </div>
-    <!-- Step 1: Last period -->
-    <div class="onboarding-step active" id="ob-step-1">
-      <div class="modal-title">When did your last period start?</div>
-      <div class="modal-subtitle">This helps Luna calculate where you are in your cycle today.</div>
-      <div class="form-group">
-        <label class="form-label">Last Period Start Date</label>
-        <input type="date" class="form-input" id="ob-start-date">
-      </div>
-      <button class="btn btn-primary btn-full" onclick="obNext(1)">Continue →</button>
-    </div>
-    <!-- Step 2: Cycle length -->
-    <div class="onboarding-step" id="ob-step-2">
-      <div class="modal-title">How long is your cycle?</div>
-      <div class="modal-subtitle">The average is 28 days, but every body is different.</div>
-      <div class="form-group">
-        <label class="form-label">Cycle Length (days)</label>
-        <div class="number-stepper">
-          <button class="stepper-btn" onclick="adjustOb('ob-cycle-val',-1,21,45)">−</button>
-          <span class="stepper-value" id="ob-cycle-val">28</span>
-          <button class="stepper-btn" onclick="adjustOb('ob-cycle-val',1,21,45)">+</button>
-        </div>
-      </div>
-      <button class="btn btn-primary btn-full" onclick="obNext(2)">Continue →</button>
-      <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="obBack(2)">← Back</button>
-    </div>
-    <!-- Step 3: Period duration -->
-    <div class="onboarding-step" id="ob-step-3">
-      <div class="modal-title">How long does your period last?</div>
-      <div class="modal-subtitle">Typically 3–7 days. We'll use this for predictions.</div>
-      <div class="form-group">
-        <label class="form-label">Period Duration (days)</label>
-        <div class="number-stepper">
-          <button class="stepper-btn" onclick="adjustOb('ob-period-val',-1,1,10)">−</button>
-          <span class="stepper-value" id="ob-period-val">5</span>
-          <button class="stepper-btn" onclick="adjustOb('ob-period-val',1,1,10)">+</button>
-        </div>
-      </div>
-      <button class="btn btn-primary btn-full" onclick="obFinish()">Start My Journey 🌙</button>
-      <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="obBack(3)">← Back</button>
-    </div>
+    <p class="active-sound-label" id="active-sound-label">No soundscape playing</p>
   </div>
-</div>
 
-<!-- ===== CALENDAR DATE MODAL ===== -->
-<div id="cal-modal" class="modal-overlay">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="cal-sheet-date serif" id="cal-sheet-date">Date</div>
-    <div class="cal-sheet-info" id="cal-sheet-info">Select an action</div>
-    <button class="cal-action-btn" onclick="calAction('start')">
-      <div class="cal-action-icon">🩸</div><span>Mark as Period Start</span>
-    </button>
-    <button class="cal-action-btn" onclick="calAction('end')">
-      <div class="cal-action-icon" style="background:var(--secondary-light);">✓</div><span>Mark as Period End</span>
-    </button>
-    <button class="cal-action-btn" onclick="calAction('remove')">
-      <div class="cal-action-icon" style="background:#FBE8E8;">✕</div><span>Remove Period Mark</span>
-    </button>
-    <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="closeModal('cal-modal')">Cancel</button>
+  <!-- ===================== ZONE MODAL ===================== -->
+  <div class="modal-scrim" id="zone-modal-scrim" onclick="closeZoneModal(event)">
+    <div class="modal" id="zone-modal"></div>
   </div>
-</div>
 
-<!-- ===== CONFIRM RESET ===== -->
-<div id="confirm-modal" class="confirm-overlay">
-  <div class="confirm-box">
-    <span class="confirm-icon">⚠️</span>
-    <div class="confirm-title serif">Reset All Data?</div>
-    <p class="confirm-text">This will permanently delete all your cycle logs, tracking history, and profile from the cloud. This cannot be undone.</p>
-    <div class="confirm-actions">
-      <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
-      <button class="btn btn-danger" onclick="resetAllData()">Reset</button>
-    </div>
-  </div>
+  <!-- ===================== TOAST ===================== -->
+  <div class="toast" id="toast"></div>
 </div>
-
-<!-- ===== LOADING OVERLAY ===== -->
-<div id="loading-overlay">
-  <div class="loading-moon">🌙</div>
-  <div class="loading-text" id="loading-text">Syncing your cycle…</div>
-</div>
-
-<!-- ===== SYNC INDICATOR ===== -->
-<div id="sync-indicator">
-  <span id="sync-icon">⟳</span>
-  <span id="sync-text">Syncing</span>
-</div>
-
-<!-- ===== TOAST ===== -->
-<div class="toast" id="toast"></div>
 
 <script>
-// ============================================================
-//  ⚙️  SUPABASE CONFIG — Replace these two values
-// ============================================================
-const SUPABASE_URL  = 'https://evgujjtqywesvclhpwqv.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2Z3VqanRxeXdlc3ZjbGhwd3F2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNzA3MTcsImV4cCI6MjA5Nzk0NjcxN30.LYj79o0gUWdVtY_kCz2eV-NQp2vRLqs8hJumlYZujUM';
+/* ============================================================
+   SOUL GARDEN — APPLICATION LOGIC
+   Sections:
+   A. Constants & data definitions
+   B. Storage helpers
+   C. Navigation / screens
+   D. Auth (signup / signin / signout)
+   E. Garden engine (level, weather, day-night, scene build)
+   F. Home dashboard
+   G. Habits & goals
+   H. Insights
+   I. Profile
+   J. Ambient sound (WebAudio)
+   K. Boot
+============================================================ */
 
-// ============================================================
-//  INIT SUPABASE CLIENT — safe init, won't crash with placeholder keys
-// ============================================================
-const SUPABASE_CONFIGURED = (
-  SUPABASE_URL  !== 'YOUR_SUPABASE_PROJECT_URL' &&
-  SUPABASE_ANON !== 'YOUR_SUPABASE_ANON_KEY'    &&
-  SUPABASE_URL.startsWith('https://')
-);
-
-let sb = null;
-try {
-  if (SUPABASE_CONFIGURED) {
-    const { createClient } = supabase;
-    sb = createClient(SUPABASE_URL, SUPABASE_ANON);
-  }
-} catch(e) {
-  console.warn('Supabase init skipped:', e.message);
-}
-
-// ============================================================
-//  CONSTANTS
-// ============================================================
-const AFFIRMATIONS = [
-  "My body is wise and capable.",
-  "I honour my natural rhythm.",
-  "Rest is productive.",
-  "I deserve kindness and patience.",
-  "Every phase of my cycle serves a purpose.",
-  "I trust the wisdom within me.",
-  "I am whole in every season of my cycle."
-];
-
-const SYMPTOMS = ['Cramps','Headache','Bloating','Acne','Back Pain','Fatigue','Breast Tenderness','Nausea','Mood Swings'];
-
-const MOODS = [
-  {emoji:'😊',label:'Happy'},  {emoji:'😌',label:'Calm'},
-  {emoji:'😴',label:'Tired'},  {emoji:'😔',label:'Sad'},
-  {emoji:'😤',label:'Irritated'},{emoji:'🥰',label:'Loving'},
-  {emoji:'😰',label:'Anxious'}
-];
-
-const PHASE_DATA = {
-  menstrual:  { label:'🩸 Menstrual',  cls:'phase-menstrual',  insight_title:'Honour Your Need for Rest',     insight:'Your body is working hard right now. Warmth, gentle movement like restorative yoga, and iron-rich foods can ease discomfort and restore your energy.', wisdom:'Prioritise rest, warmth, and gentle movement. Your body is doing deep work right now — honour that.' },
-  follicular: { label:'🌱 Follicular', cls:'phase-follicular', insight_title:'Ride Your Rising Energy',      insight:'Oestrogen is climbing and so is your vitality. This is an ideal phase for starting new projects, intense workouts, and social connection.', wisdom:'Your energy is rising. This is a great time for new ideas and fresh starts — lean into that momentum.' },
-  ovulation:  { label:'🌸 Ovulation',  cls:'phase-ovulation',  insight_title:'Peak Energy & Connection',    insight:'You\'re at your communication and energy peak. Your skin may glow, your confidence is high — great time for important conversations or presentations.', wisdom:'You may feel more social and expressive. Lean into connection and communication today.' },
-  luteal:     { label:'🌙 Luteal',     cls:'phase-luteal',     insight_title:'Nourish & Slow Down',         insight:'Progesterone rises and you may feel the need to turn inward. Magnesium-rich foods, reduced caffeine, and gentle movement support this phase beautifully.', wisdom:'Slow down and nourish yourself. Rest is not laziness — it\'s wisdom. Your body knows what it needs.' }
+/* ---------- A. CONSTANTS ---------- */
+const LS = {
+  user:   'soulGarden_user',
+  habits: 'soulGarden_habits',
+  logs:   'soulGarden_logs',
+  garden: 'soulGarden_garden',
+  session:'soulGarden_session'
 };
 
-// ============================================================
-//  APP STATE
-// ============================================================
-let currentUser    = null;
-let userProfile    = null;     // { name, cycle_length, period_length }
-let userCycles     = [];       // [ { id, start_date, end_date } ]
-let userLogs       = {};       // { "YYYY-MM-DD": { symptoms, mood, notes, water, sleep } }
-let calendarDate   = new Date();
-let selectedCalDate= null;
-let trackerState   = { symptoms:[], mood:'', notes:'', water:0, sleep:7 };
-let profileBuffer  = { cycleLength:28, periodLength:5 };
+const COMPANIONS = [
+  { id:'owl',       emo:'🦉', name:'Owl' },
+  { id:'butterfly', emo:'🦋', name:'Butterfly' },
+  { id:'fox',       emo:'🦊', name:'Fox' },
+  { id:'turtle',    emo:'🐢', name:'Turtle' },
+  { id:'bee',       emo:'🐝', name:'Bee' }
+];
 
-// ============================================================
-//  DATE HELPERS
-// ============================================================
-const todayStr  = () => { const d=new Date(); return fmt(d); };
-const fmt       = d  => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-const parseDate = s  => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
-const daysBetween=(a,b)=>Math.floor((b-a)/86400000);
-const addDays   =(d,n)=>{ const r=new Date(d); r.setDate(r.getDate()+n); return r; };
-const formatDate   = d => d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-const formatShort  = d => d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const ZONES = [
+  { id:'prosperity', emo:'💰', name:'Prosperity Patch', tip:'Tend your finances like seeds — patience compounds.' },
+  { id:'wisdom',     emo:'📚', name:'Wisdom Corner',    tip:'A few pages a day grows a forest of understanding.' },
+  { id:'wellness',   emo:'💪', name:'Wellness Grove',   tip:'Your body is the soil everything else grows in.' },
+  { id:'selflove',   emo:'❤️', name:'Self-Love Garden', tip:'Kindness to yourself waters every other zone.' },
+  { id:'peace',      emo:'🧘', name:'Peace Pond',       tip:'Stillness is not empty — it is where roots deepen.' }
+];
 
-// ============================================================
-//  LOADING & SYNC UI
-// ============================================================
-function showLoading(msg='Syncing your data…') {
-  document.getElementById('loading-text').textContent = msg;
-  document.getElementById('loading-overlay').classList.add('show');
-}
-function hideLoading() {
-  document.getElementById('loading-overlay').classList.remove('show');
-}
-function showSync(state, msg) {
-  const el = document.getElementById('sync-indicator');
-  const icon= document.getElementById('sync-icon');
-  const txt = document.getElementById('sync-text');
-  el.className = 'show ' + state;
-  icon.textContent = state==='syncing' ? '⟳' : state==='synced' ? '✓' : '✕';
-  txt.textContent  = msg;
-  el.classList.add('show');
-  if (state !== 'syncing') setTimeout(()=>el.classList.remove('show'), 2500);
-}
+const LEVELS = [
+  { n:1, emo:'🌱', name:'Seed' },
+  { n:2, emo:'🌿', name:'Young Plant' },
+  { n:3, emo:'🌷', name:'Blooming Garden' },
+  { n:4, emo:'🌳', name:'Growing Tree' },
+  { n:5, emo:'🌸', name:'Flourishing Garden' },
+  { n:6, emo:'✨', name:'Enchanted Garden' }
+];
+// XP thresholds per level (cumulative). Each habit completion = 10 XP.
+const XP_PER_LEVEL = 80; // 8 completions per level
 
-// ============================================================
-//  SUPABASE AUTH
-// ============================================================
-async function initAuth() {
-  if (!sb) {
-    // Supabase not configured yet — just show splash, button will show toast
-    return;
-  }
-  // Listen for auth state changes
-  sb.auth.onAuthStateChange(async (event, session) => {
-    if (session && session.user) {
-      currentUser = session.user;
-      await loadAllUserData();
-      checkOnboarding();
-    } else {
-      currentUser = null;
-      userProfile = null;
-      userCycles  = [];
-      userLogs    = {};
-      showAuthScreen();
-    }
-  });
+const AFFIRMATIONS = [
+  'Growth takes time. You are right on schedule.',
+  'Every small step is still a step forward.',
+  'Your effort today is your garden tomorrow.',
+  'Rest is part of the journey.',
+  'You are becoming who you are meant to be.'
+];
 
-  // Check existing session
-  const { data: { session } } = await sb.auth.getSession();
-  if (session && session.user) {
-    currentUser = session.user;
-  } else {
-    showAuthScreen();
-  }
-}
+const SOUNDS = [
+  { id:'birds',  emo:'🐦', name:'Birds' },
+  { id:'rain',   emo:'🌧', name:'Rain' },
+  { id:'wind',   emo:'🌬', name:'Wind' },
+  { id:'leaves', emo:'🍃', name:'Leaves' },
+  { id:'stream', emo:'💦', name:'Stream' },
+  { id:'nature', emo:'🦋', name:'Full Nature' }
+];
 
-function showAuthScreen() {
-  hideSplash();
-  document.getElementById('bottom-nav').style.display = 'none';
-  navigate('auth');
-}
+/* ---------- B. SUPABASE BACKEND ---------- */
+// Project: Soul Garden — auth + Postgres (Row Level Security per user)
+const SUPABASE_URL = 'https://cifpilcvmhdrlsyfemju.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_DHv4WscAex4u--ZWME3IpA_tHed2l1f';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function hideSplash() {
-  const splash = document.getElementById('screen-splash');
-  splash.classList.remove('active');
-}
+// In-memory cache of the signed-in user's data. The render layer reads this
+// through `store.get(...)`; mutations write through to Supabase explicitly.
+const state = { user:null, garden:{xp:0,weeklyStoryShown:0}, habits:[], logs:[] };
 
-function switchAuthTab(tab) {
-  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
-  document.getElementById('tab-'+tab).classList.add('active');
-  document.getElementById('form-'+tab).classList.add('active');
-}
+const store = {
+  get(k, fallback){
+    let v;
+    if(k===LS.user)        v = state.user;
+    else if(k===LS.habits) v = state.habits;
+    else if(k===LS.logs)   v = state.logs;
+    else if(k===LS.garden) v = state.garden;
+    return (v===null || v===undefined) ? fallback : v;
+  },
+  set(k, v){
+    if(k===LS.user)        state.user   = v;
+    else if(k===LS.habits) state.habits = v;
+    else if(k===LS.logs)   state.logs   = v;
+    else if(k===LS.garden) state.garden = v;
+  },
+  del(){}
+};
+const todayStr = () => new Date().toISOString().slice(0,10);
+function daysBetween(a,b){ return Math.round((new Date(b)-new Date(a))/86400000); }
 
-async function signIn() {
-  if (!sb) { showAuthError('signin','Supabase is not configured. Please add your URL and key.'); return; }
-  const email = document.getElementById('signin-email').value.trim();
-  const pass  = document.getElementById('signin-password').value;
-  const errEl = document.getElementById('signin-error');
-  errEl.classList.remove('show');
-
-  if (!email || !pass) { showAuthError('signin','Please fill in all fields.'); return; }
-
-  const btn = document.getElementById('signin-btn');
-  btn.disabled = true; btn.textContent = 'Signing in…';
-
-  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-  btn.disabled = false; btn.textContent = 'Sign In';
-
-  if (error) showAuthError('signin', error.message);
-}
-
-async function signUp() {
-  if (!sb) { showAuthError('signup','Supabase is not configured. Please add your URL and key.'); return; }
-  const name  = document.getElementById('signup-name').value.trim();
-  const email = document.getElementById('signup-email').value.trim();
-  const pass  = document.getElementById('signup-password').value;
-
-  if (!name || !email || !pass) { showAuthError('signup','Please fill in all fields.'); return; }
-  if (pass.length < 6)          { showAuthError('signup','Password must be at least 6 characters.'); return; }
-
-  const btn = document.getElementById('signup-btn');
-  btn.disabled = true; btn.textContent = 'Creating account…';
-
-  const { data, error } = await sb.auth.signUp({ email, password: pass });
-  btn.disabled = false; btn.textContent = 'Create Account';
-
-  if (error) { showAuthError('signup', error.message); return; }
-
-  // Save name to profile (will be created by trigger, we update it)
-  if (data.user) {
-    await sb.from('profiles').upsert({ id: data.user.id, name, cycle_length: 28, period_length: 5 });
-  }
-
-  document.getElementById('signup-success').textContent = '✓ Account created! Check your email to confirm, then sign in.';
-  document.getElementById('signup-success').classList.add('show');
-}
-
-async function signInWithGoogle() {
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.href }
-  });
-  if (error) showToast('Google sign-in failed: ' + error.message);
-}
-
-async function signOut() {
-  showLoading('Signing out…');
-  await sb.auth.signOut();
-  hideLoading();
-  showToast('Signed out successfully');
-}
-
-async function sendPasswordReset() {
-  const email = document.getElementById('signin-email').value.trim();
-  if (!email) { showAuthError('signin','Enter your email first.'); return; }
-  const { error } = await sb.auth.resetPasswordForEmail(email);
-  if (error) showAuthError('signin', error.message);
-  else {
-    document.getElementById('signin-success').textContent = '✓ Password reset email sent!';
-    document.getElementById('signin-success').classList.add('show');
-  }
-}
-
-function showAuthError(form, msg) {
-  const el = document.getElementById(form+'-error');
-  el.textContent = msg;
-  el.classList.add('show');
-}
-
-// ============================================================
-//  DATA LAYER — SUPABASE CRUD
-// ============================================================
-
-// Load everything at once after login
-async function loadAllUserData() {
-  showLoading('Loading your cycle data…');
-  try {
-    await Promise.all([fetchProfile(), fetchCycles(), fetchLogs()]);
-    showSync('synced', 'Synced');
-  } catch(e) {
-    showSync('error', 'Sync error');
-    showToast('Could not load data. Check your connection.');
-  }
-  hideLoading();
-}
-
-// ---- PROFILE ----
-async function fetchProfile() {
-  const { data, error } = await sb.from('profiles')
-    .select('*').eq('id', currentUser.id).single();
-  if (!error && data) userProfile = data;
-  else userProfile = { name: currentUser.email.split('@')[0], cycle_length: 28, period_length: 5 };
-}
-
-async function pushProfile(updates) {
-  showSync('syncing','Saving…');
-  const { error } = await sb.from('profiles')
-    .upsert({ id: currentUser.id, ...updates, updated_at: new Date().toISOString() });
-  if (!error) { showSync('synced','Saved ✓'); }
-  else        { showSync('error','Save failed'); }
-  return !error;
-}
-
-// ---- CYCLES ----
-async function fetchCycles() {
-  const { data, error } = await sb.from('cycles')
-    .select('*').eq('user_id', currentUser.id).order('start_date', { ascending: false });
-  if (!error) userCycles = data || [];
-}
-
-async function insertCycle(startDate, endDate) {
-  showSync('syncing','Saving…');
-  const { data, error } = await sb.from('cycles')
-    .insert({ user_id: currentUser.id, start_date: startDate, end_date: endDate })
-    .select().single();
-  if (!error) { userCycles.unshift(data); showSync('synced','Saved ✓'); }
-  else        { showSync('error','Save failed'); showToast('Could not save cycle.'); }
-  return !error;
-}
-
-async function updateCycleEnd(cycleId, endDate) {
-  showSync('syncing','Saving…');
-  const { error } = await sb.from('cycles')
-    .update({ end_date: endDate }).eq('id', cycleId);
-  if (!error) {
-    const c = userCycles.find(x=>x.id===cycleId);
-    if (c) c.end_date = endDate;
-    showSync('synced','Saved ✓');
-  } else { showSync('error','Save failed'); }
-  return !error;
-}
-
-async function deleteCycleContaining(dateObj) {
-  const ds = fmt(dateObj);
-  const cycle = userCycles.find(c => {
-    if (!c.start_date) return false;
-    const s = parseDate(c.start_date);
-    const pLen = (userProfile && userProfile.period_length) || 5;
-    const e = c.end_date ? parseDate(c.end_date) : addDays(s, pLen-1);
-    return dateObj >= s && dateObj <= e;
-  });
-  if (!cycle) return false;
-  showSync('syncing','Removing…');
-  const { error } = await sb.from('cycles').delete().eq('id', cycle.id);
-  if (!error) { userCycles = userCycles.filter(c=>c.id!==cycle.id); showSync('synced','Removed ✓'); }
-  else        { showSync('error','Remove failed'); }
-  return !error;
-}
-
-// ---- LOGS ----
-async function fetchLogs() {
-  const { data, error } = await sb.from('logs')
-    .select('*').eq('user_id', currentUser.id);
-  if (!error && data) {
-    userLogs = {};
-    data.forEach(row => {
-      userLogs[row.log_date] = {
-        symptoms: row.symptoms || [],
-        mood:     row.mood     || '',
-        notes:    row.notes    || '',
-        water:    row.water    || 0,
-        sleep:    row.sleep    || 7
-      };
-    });
-  }
-}
-
-async function upsertLog(dateStr, logData) {
-  showSync('syncing','Saving…');
-  const { error } = await sb.from('logs').upsert({
-    user_id:  currentUser.id,
-    log_date: dateStr,
-    symptoms: logData.symptoms,
-    mood:     logData.mood,
-    notes:    logData.notes,
-    water:    logData.water,
-    sleep:    logData.sleep
-  }, { onConflict: 'user_id,log_date' });
-  if (!error) { userLogs[dateStr] = logData; showSync('synced','Saved ✓'); }
-  else        { showSync('error','Save failed'); showToast('Could not save log.'); }
-  return !error;
-}
-
-async function deleteAllUserData() {
-  showLoading('Deleting all data…');
-  await Promise.all([
-    sb.from('logs').delete().eq('user_id', currentUser.id),
-    sb.from('cycles').delete().eq('user_id', currentUser.id),
-    sb.from('profiles').delete().eq('id', currentUser.id)
+// Load all of the signed-in user's rows from Supabase into `state`.
+async function loadData(){
+  const { data:{ user } } = await sb.auth.getUser();
+  if(!user) return false;
+  const [prof, garden, habits, logs] = await Promise.all([
+    sb.from('profiles').select('*').eq('id', user.id).maybeSingle(),
+    sb.from('garden').select('*').eq('user_id', user.id).maybeSingle(),
+    sb.from('habits').select('*').eq('user_id', user.id),
+    sb.from('logs').select('*').eq('user_id', user.id)
   ]);
-  userCycles  = [];
-  userLogs    = {};
-  userProfile = { name:'', cycle_length:28, period_length:5 };
-  hideLoading();
+  const p = prof.data || {};
+  state.user = {
+    id: user.id, email: user.email,
+    name: p.name || (user.user_metadata && user.user_metadata.name) || 'Friend',
+    companion: p.companion || 'fox',
+    zones: (p.zones && p.zones.length) ? p.zones : ['wellness'],
+    created: p.created || todayStr()
+  };
+  const gd = garden.data || {};
+  state.garden = { xp: gd.xp || 0, weeklyStoryShown: gd.weekly_story_shown || 0 };
+  state.habits = (habits.data || []).map(h=>({ id:h.id, name:h.name, zone:h.zone, freq:h.freq, streak:h.streak||0, lastDone:h.last_done }));
+  state.logs   = (logs.data   || []).map(l=>({ id:l.id, habitId:l.habit_id, name:l.name, zone:l.zone, date:l.date }));
+  return true;
 }
 
-// ============================================================
-//  CYCLE CALCULATIONS
-// ============================================================
-function getLastPeriodStart() {
-  if (!userCycles.length) return null;
-  const sorted = [...userCycles].sort((a,b)=>b.start_date.localeCompare(a.start_date));
-  return parseDate(sorted[0].start_date);
+/* Selections for signup */
+let pick = { companion:'fox', zone:'wellness' };
+
+/* ---------- C. NAVIGATION ---------- */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById('screen-'+id);
+  if(el) el.classList.add('active');
+  window.scrollTo(0,0);
+}
+function go(id){ showScreen(id); document.getElementById('bottom-nav').style.display='none'; }
+
+function nav(id){
+  showScreen(id);
+  document.getElementById('bottom-nav').style.display='flex';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.screen===id));
+  // Refresh dynamic screens
+  if(id==='home')     renderHome();
+  if(id==='garden')   renderFullGarden();
+  if(id==='habits')   renderHabits();
+  if(id==='insights') renderInsights();
+  if(id==='profile')  renderProfile();
 }
 
-function calculateCycleDay() {
-  const total = (userProfile && userProfile.cycle_length) || 28;
-  const start = getLastPeriodStart();
-  if (!start) return { day:1, total };
-  const day = daysBetween(start, new Date()) + 1;
-  return { day: Math.max(1, Math.min(day, total)), total };
-}
-
-function calculateCurrentPhase() {
-  const { day, total } = calculateCycleDay();
-  const pLen = (userProfile && userProfile.period_length) || 5;
-  if (day <= pLen)                           return 'menstrual';
-  if (day <= Math.round(total * 0.46))       return 'follicular';
-  if (day <= Math.round(total * 0.54))       return 'ovulation';
-  return 'luteal';
-}
-
-function predictNextPeriods(count=3) {
-  const start = getLastPeriodStart();
-  if (!start) return [];
-  let avgLen = (userProfile && userProfile.cycle_length) || 28;
-
-  if (userCycles.length >= 2) {
-    const sorted = [...userCycles].sort((a,b)=>a.start_date.localeCompare(b.start_date));
-    let total=0, ct=0;
-    for (let i=1;i<sorted.length;i++) {
-      const gap = daysBetween(parseDate(sorted[i-1].start_date), parseDate(sorted[i].start_date));
-      if (gap>15 && gap<60) { total+=gap; ct++; }
-    }
-    if (ct>0) avgLen = Math.round(total/ct);
-  }
-  const result=[];
-  for (let i=1;i<=count;i++) result.push(addDays(start, avgLen*i));
-  return result;
-}
-
-function calculateFertileWindow(cycleStart) {
-  const cycleLen = (userProfile && userProfile.cycle_length) || 28;
-  const ovDay    = Math.round(cycleLen * 0.5);
-  return { start: addDays(cycleStart, ovDay-5), end: addDays(cycleStart, ovDay-1), ovulation: addDays(cycleStart, ovDay-1) };
-}
-
-function daysUntilNextPeriod() {
-  const next = predictNextPeriods(1);
-  if (!next.length) return null;
-  return Math.max(0, daysBetween(new Date(), next[0]));
-}
-
-function calculateInsights() {
-  if (userCycles.length < 2) return null;
-  const sorted = [...userCycles].sort((a,b)=>a.start_date.localeCompare(b.start_date));
-  let totalLen=0, lenCount=0;
-  for (let i=1;i<sorted.length;i++) {
-    const gap = daysBetween(parseDate(sorted[i-1].start_date), parseDate(sorted[i].start_date));
-    if (gap>15 && gap<60) { totalLen+=gap; lenCount++; }
-  }
-  const avgCycleLen = lenCount ? Math.round(totalLen/lenCount) : ((userProfile&&userProfile.cycle_length)||28);
-
-  let durTotal=0, durCount=0;
-  for (const c of userCycles) {
-    if (c.start_date && c.end_date) {
-      const dur = daysBetween(parseDate(c.start_date), parseDate(c.end_date)) + 1;
-      if (dur>0 && dur<15) { durTotal+=dur; durCount++; }
-    }
-  }
-  const avgPeriodDur = durCount ? Math.round(durTotal/durCount) : ((userProfile&&userProfile.period_length)||5);
-
-  const symptomCounts={};
-  for (const log of Object.values(userLogs)) {
-    if (log.symptoms) log.symptoms.forEach(s=>{ symptomCounts[s]=(symptomCounts[s]||0)+1; });
-  }
-  const topSymptom = Object.entries(symptomCounts).sort((a,b)=>b[1]-a[1])[0];
-
-  const moodCounts={};
-  const start = getLastPeriodStart();
-  for (const [date, log] of Object.entries(userLogs)) {
-    if (log.mood && start) {
-      const d = parseDate(date);
-      const dayNum = daysBetween(start, d) + 1;
-      const isLuteal = dayNum > Math.round(avgCycleLen*0.54) && dayNum <= avgCycleLen;
-      if (isLuteal) moodCounts[log.mood] = (moodCounts[log.mood]||0)+1;
-    }
-  }
-  const topMood = Object.entries(moodCounts).sort((a,b)=>b[1]-a[1])[0];
-
-  return { avgCycleLen, avgPeriodDur, topSymptom: topSymptom?topSymptom[0]:null, topMood: topMood?topMood[0]:null, totalCycles: userCycles.length };
-}
-
-// ============================================================
-//  NAVIGATION
-// ============================================================
-function navigate(screen) {
-  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display=''; });
-  const el = document.getElementById('screen-'+screen);
-  if (!el) return;
-  requestAnimationFrame(()=>{ el.style.display='block'; requestAnimationFrame(()=>el.classList.add('active')); });
-
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  const navEl = document.getElementById('nav-'+screen);
-  if (navEl) navEl.classList.add('active');
-
-  const noNav = ['splash','auth'];
-  document.getElementById('bottom-nav').style.display = noNav.includes(screen) ? 'none' : 'flex';
-
-  if (screen==='home')     loadHome();
-  if (screen==='calendar') loadCalendar();
-  if (screen==='tracker')  loadTracker();
-  if (screen==='insights') loadInsights();
-  if (screen==='profile')  loadProfileScreen();
-}
-
-// ============================================================
-//  SPLASH & ONBOARDING
-// ============================================================
-function beginJourney() {
-  if (!SUPABASE_CONFIGURED || !sb) {
-    showToast('⚙️ Please add your Supabase URL & key to the file first.');
-    return;
-  }
-  if (!currentUser) {
-    hideSplash();
-    navigate('auth');
-  } else {
-    checkOnboarding();
-  }
-}
-
-function checkOnboarding() {
-  document.getElementById('bottom-nav').style.display = 'flex';
-  hideSplash();
-  if (!userCycles.length) {
-    navigate('home');
-    setTimeout(() => {
-      document.getElementById('ob-start-date').value = todayStr();
-      document.getElementById('ob-start-date').max   = todayStr();
-      showModal('onboarding-modal');
-      setObStep(1);
-    }, 400);
-  } else {
-    navigate('home');
-  }
-}
-
-function setObStep(n) {
-  document.querySelectorAll('.onboarding-step').forEach(s=>s.classList.remove('active'));
-  document.getElementById('ob-step-'+n).classList.add('active');
-  for (let i=1;i<=3;i++) document.getElementById('sdot-'+i).classList.toggle('done', i<=n);
-}
-
-function obNext(step) {
-  if (step===1 && !document.getElementById('ob-start-date').value) { showToast('Please select a date 📅'); return; }
-  setObStep(step+1);
-}
-function obBack(step) { setObStep(step-1); }
-function adjustOb(id, delta, min, max) {
-  const el=document.getElementById(id);
-  el.textContent = Math.max(min, Math.min(max, parseInt(el.textContent)+delta));
-}
-
-async function obFinish() {
-  const startDate = document.getElementById('ob-start-date').value;
-  const cycleLen  = parseInt(document.getElementById('ob-cycle-val').textContent);
-  const periodLen = parseInt(document.getElementById('ob-period-val').textContent);
-
-  const endDate = fmt(addDays(parseDate(startDate), periodLen-1));
-
-  // Save profile settings
-  await pushProfile({ cycle_length: cycleLen, period_length: periodLen });
-  userProfile.cycle_length  = cycleLen;
-  userProfile.period_length = periodLen;
-
-  // Save first cycle
-  await insertCycle(startDate, endDate);
-
-  closeModal('onboarding-modal');
-  loadHome();
-  showToast('Welcome to Luna! 🌙');
-}
-
-// ============================================================
-//  MODALS
-// ============================================================
-function showModal(id) {
-  const el = document.getElementById(id);
-  el.style.display='flex';
-  requestAnimationFrame(()=>el.classList.add('visible'));
-}
-function closeModal(id) {
-  const el=document.getElementById(id);
-  el.classList.remove('visible');
-  setTimeout(()=>{ el.style.display='none'; },350);
-}
-function closeConfirm() {
-  const el=document.getElementById('confirm-modal');
-  el.classList.remove('visible');
-  setTimeout(()=>{ el.style.display='none'; },250);
-}
-
-document.addEventListener('click', e => {
-  ['onboarding-modal','cal-modal'].forEach(id=>{
-    const el=document.getElementById(id);
-    if (e.target===el) closeModal(id);
-  });
-});
-
-// ============================================================
-//  HOME
-// ============================================================
-function loadHome() {
-  if (!userProfile) return;
-  const hour = new Date().getHours();
-  document.getElementById('greeting-time').textContent = hour<12?'Good Morning':hour<17?'Good Afternoon':'Good Evening';
-  document.getElementById('greeting-name').textContent = (userProfile.name || currentUser?.email?.split('@')[0] || 'Welcome');
-
-  const { day, total } = calculateCycleDay();
-  document.getElementById('ring-day').textContent   = 'Day '+day;
-  document.getElementById('ring-label').textContent = 'of '+total+' days';
-
-  const circumference = 2*Math.PI*70;
-  const ring = document.getElementById('ring-progress');
-  const phase = calculateCurrentPhase();
-  const phaseColors = { menstrual:'#D8A7B1', follicular:'#C8B6E2', ovulation:'#C8A96B', luteal:'#C8B6E2' };
-  ring.style.stroke = phaseColors[phase];
-  setTimeout(()=>{ ring.style.strokeDashoffset = circumference*(1-(day/total)); },100);
-
-  const pd = PHASE_DATA[phase];
-  const badge = document.getElementById('phase-badge');
-  badge.textContent = pd.label; badge.className = 'phase-badge '+pd.cls;
-
-  const dUntil = daysUntilNextPeriod();
-  const npText = document.getElementById('next-period-text');
-  if (dUntil===0)        npText.innerHTML = '<strong>Your period may start today</strong>';
-  else if (dUntil!==null) npText.innerHTML = 'Next period in <strong>'+dUntil+' days</strong>';
-  else                    npText.textContent = 'Log your cycle to see predictions';
-
-  document.getElementById('wellness-insight-title').textContent = pd.insight_title;
-  document.getElementById('wellness-insight-text').textContent  = pd.insight;
-  document.getElementById('daily-affirmation').textContent = '"'+AFFIRMATIONS[new Date().getDate()%AFFIRMATIONS.length]+'"';
-  document.getElementById('cycle-wisdom').textContent      = pd.wisdom;
-  document.getElementById('greeting-sub').textContent      = 'You\'re on day '+day+' of your cycle today.';
-}
-
-// ============================================================
-//  CALENDAR
-// ============================================================
-function loadCalendar()  { renderCalendar(); }
-function changeMonth(d)  { calendarDate.setMonth(calendarDate.getMonth()+d); renderCalendar(); }
-
-function renderCalendar() {
-  const year=calendarDate.getFullYear(), month=calendarDate.getMonth();
-  document.getElementById('cal-month-title').textContent = calendarDate.toLocaleDateString('en-US',{month:'long',year:'numeric'});
-
-  const today     = new Date(); today.setHours(0,0,0,0);
-  const pLen      = (userProfile&&userProfile.period_length)||5;
-  const periodDays= new Set(), predictedDays=new Set(), fertileDays=new Set(), ovulationDays=new Set();
-
-  for (const cycle of userCycles) {
-    if (!cycle.start_date) continue;
-    const s = parseDate(cycle.start_date);
-    const e = cycle.end_date ? parseDate(cycle.end_date) : addDays(s, pLen-1);
-    let d=new Date(s); while(d<=e){ periodDays.add(fmt(d)); d=addDays(d,1); }
-    const fw=calculateFertileWindow(s);
-    let fd=new Date(fw.start); while(fd<=fw.end){ fertileDays.add(fmt(fd)); fd=addDays(fd,1); }
-    ovulationDays.add(fmt(fw.ovulation));
-  }
-  for (const pStart of predictNextPeriods(3)) {
-    for (let i=0;i<pLen;i++) predictedDays.add(fmt(addDays(pStart,i)));
-    const fw=calculateFertileWindow(pStart);
-    let fd=new Date(fw.start); while(fd<=fw.end){ fertileDays.add(fmt(fd)); fd=addDays(fd,1); }
-    ovulationDays.add(fmt(fw.ovulation));
-  }
-
-  const grid=document.getElementById('cal-grid');
-  grid.innerHTML='';
-  const firstDay=new Date(year,month,1).getDay();
-  const daysInMonth=new Date(year,month+1,0).getDate();
-
-  for (let i=0;i<firstDay;i++) { const c=document.createElement('div'); c.className='cal-day empty'; grid.appendChild(c); }
-
-  for (let d=1;d<=daysInMonth;d++) {
-    const cell=document.createElement('div');
-    const dateObj=new Date(year,month,d); dateObj.setHours(0,0,0,0);
-    const ds=fmt(dateObj);
-    let cls='cal-day';
-    if (ds===fmt(today))          cls+=' today';
-    if (periodDays.has(ds))       cls+=' period';
-    else if (predictedDays.has(ds)) cls+=' predicted-period';
-    else if (ovulationDays.has(ds)) cls+=' ovulation';
-    else if (fertileDays.has(ds))   cls+=' fertile';
-    cell.className=cls; cell.textContent=d;
-    cell.addEventListener('click',()=>openCalModal(dateObj));
-    grid.appendChild(cell);
-  }
-}
-
-function openCalModal(dateObj) {
-  selectedCalDate=dateObj;
-  document.getElementById('cal-sheet-date').textContent = formatDate(dateObj);
-  const ds=fmt(dateObj);
-  const isLogged=userCycles.some(c=>{
-    if(!c.start_date) return false;
-    const s=parseDate(c.start_date);
-    const pLen=(userProfile&&userProfile.period_length)||5;
-    const e=c.end_date?parseDate(c.end_date):addDays(s,pLen-1);
-    return dateObj>=s && dateObj<=e;
-  });
-  document.getElementById('cal-sheet-info').textContent = isLogged?'This date is marked as a period day.':'Tap to log your period for this date.';
-  showModal('cal-modal');
-}
-
-async function calAction(action) {
-  if (!selectedCalDate) return;
-  const ds=fmt(selectedCalDate);
-  const pLen=(userProfile&&userProfile.period_length)||5;
-
-  if (action==='start') {
-    const endDate=fmt(addDays(selectedCalDate,pLen-1));
-    await insertCycle(ds, endDate);
-    showToast('Period start logged 🩸');
-  } else if (action==='end') {
-    const sorted=[...userCycles].filter(c=>c.start_date&&c.start_date<=ds).sort((a,b)=>b.start_date.localeCompare(a.start_date));
-    if (sorted.length) { await updateCycleEnd(sorted[0].id, ds); showToast('Period end logged ✓'); }
-    else showToast('Please log a period start first');
-  } else if (action==='remove') {
-    await deleteCycleContaining(selectedCalDate);
-    showToast('Period mark removed');
-  }
-  closeModal('cal-modal');
-  renderCalendar();
-}
-
-// ============================================================
-//  TRACKER
-// ============================================================
-function loadTracker() {
-  document.getElementById('tracker-date-label').textContent = formatDate(new Date());
-  const todayLog = userLogs[todayStr()] || {};
-  trackerState = { symptoms:todayLog.symptoms||[], mood:todayLog.mood||'', notes:todayLog.notes||'', water:todayLog.water||0, sleep:todayLog.sleep||7 };
-  renderSymptoms(); renderMoods(); renderWater(); renderSleep();
-  document.getElementById('mood-notes').value = trackerState.notes;
-}
-
-function renderSymptoms() {
-  const c=document.getElementById('symptom-pills'); c.innerHTML='';
-  SYMPTOMS.forEach(s=>{
-    const pill=document.createElement('button');
-    pill.className='pill'+(trackerState.symptoms.includes(s)?' selected':'');
-    pill.textContent=s;
-    pill.onclick=()=>{ if(trackerState.symptoms.includes(s)) { trackerState.symptoms=trackerState.symptoms.filter(x=>x!==s); pill.classList.remove('selected'); } else { trackerState.symptoms.push(s); pill.classList.add('selected'); } };
-    c.appendChild(pill);
-  });
-}
-
-function renderMoods() {
-  const c=document.getElementById('mood-grid'); c.innerHTML='';
-  MOODS.forEach(m=>{
-    const btn=document.createElement('button');
-    btn.className='mood-btn'+(trackerState.mood===m.label?' selected':'');
-    btn.innerHTML='<span class="mood-emoji">'+m.emoji+'</span>'+m.label;
-    btn.onclick=()=>{ trackerState.mood=m.label; document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); };
-    c.appendChild(btn);
-  });
-}
-
-function renderWater() {
-  const c=document.getElementById('water-glasses'); c.innerHTML='';
-  for (let i=0;i<8;i++) {
-    const b=document.createElement('button');
-    b.className='glass-btn'+(i<trackerState.water?' filled':'');
-    b.textContent='💧';
-    b.onclick=()=>{ trackerState.water=trackerState.water===(i+1)?i:i+1; renderWater(); };
-    c.appendChild(b);
-  }
-  document.getElementById('water-fill').style.width=(trackerState.water/8*100)+'%';
-  document.getElementById('water-label').textContent=trackerState.water+' / 8 glasses';
-}
-
-function renderSleep() {
-  document.getElementById('sleep-value').textContent=trackerState.sleep;
-  const badge=document.getElementById('sleep-quality-badge');
-  if (trackerState.sleep>=7) { badge.textContent='Restful'; badge.className='sleep-quality restful'; }
-  else if (trackerState.sleep>=5) { badge.textContent='Fair'; badge.className='sleep-quality fair'; }
-  else { badge.textContent='Low'; badge.className='sleep-quality low'; }
-}
-
-function changeSleep(delta) { trackerState.sleep=Math.max(0,Math.min(12,trackerState.sleep+delta)); renderSleep(); }
-
-async function saveTracker() {
-  trackerState.notes=document.getElementById('mood-notes').value.trim();
-  const btn=document.getElementById('save-tracker-btn');
-  btn.disabled=true; btn.textContent='Saving…';
-  const ok = await upsertLog(todayStr(), trackerState);
-  btn.disabled=false;
-  if (ok) {
-    btn.textContent='Saved ✓';
-    btn.style.background='linear-gradient(135deg,#A8C8A0,#7BAE73)';
-    showToast("Today's log saved 💫");
-    setTimeout(()=>{ btn.textContent="Save Today's Log ✓"; btn.style.background=''; },2000);
-  } else {
-    btn.textContent="Save Today's Log ✓";
-    showToast('Save failed. Please try again.');
-  }
-}
-
-// ============================================================
-//  INSIGHTS
-// ============================================================
-function loadInsights() {
-  const container=document.getElementById('insights-content');
-  const history  =document.getElementById('history-section');
-  if (userCycles.length<2) {
-    container.innerHTML=`<div class="empty-state"><span class="empty-state-icon">🌱</span><div class="empty-state-title">Your insights are growing</div><p class="empty-state-text">Keep logging — your personalised insights will appear after <strong>2 full cycles</strong>. You've logged <strong>${userCycles.length}</strong> cycle${userCycles.length===1?'':'s'} so far.</p></div>`;
-    history.innerHTML='';
-    renderHistory(history);
-    return;
-  }
-
-  const ins=calculateInsights();
-  if (!ins) return;
-
-  container.innerHTML='';
-  const grid=document.createElement('div'); grid.className='insight-stat-grid';
-  grid.innerHTML=`
-    <div class="insight-stat-card"><div class="insight-stat-icon">📅</div><div class="insight-stat-value">${ins.avgCycleLen}</div><div class="insight-stat-label">Average cycle length (days)</div></div>
-    <div class="insight-stat-card"><div class="insight-stat-icon">🩸</div><div class="insight-stat-value">${ins.avgPeriodDur}</div><div class="insight-stat-label">Average period duration (days)</div></div>
-    <div class="insight-stat-card"><div class="insight-stat-icon">🌙</div><div class="insight-stat-value">${ins.totalCycles}</div><div class="insight-stat-label">Cycles logged</div></div>
-    <div class="insight-stat-card"><div class="insight-stat-icon">✨</div><div class="insight-stat-value">${Object.keys(userLogs).length}</div><div class="insight-stat-label">Days tracked</div></div>`;
-
-  const cards=document.createElement('div');
-  if (ins.topSymptom) cards.innerHTML+=`<div class="insight-full-card"><div class="insight-icon-circle">🩺</div><div class="insight-text-block"><div class="insight-card-title">Most Common Symptom</div><div class="insight-card-detail">You most frequently experience <strong>${ins.topSymptom}</strong> in the days before your period.</div></div></div>`;
-  if (ins.topMood) {
-    const mObj=MOODS.find(m=>m.label===ins.topMood);
-    cards.innerHTML+=`<div class="insight-full-card"><div class="insight-icon-circle">${mObj?mObj.emoji:'🌈'}</div><div class="insight-text-block"><div class="insight-card-title">Luteal Phase Mood Pattern</div><div class="insight-card-detail">During your luteal phase, you most often feel <strong>${ins.topMood}</strong>. Knowing this can help you plan ahead.</div></div></div>`;
-  }
-  const next=predictNextPeriods(1);
-  if (next.length) {
-    const dUntil=daysUntilNextPeriod();
-    cards.innerHTML+=`<div class="insight-full-card"><div class="insight-icon-circle">🗓️</div><div class="insight-text-block"><div class="insight-card-title">Next Predicted Period</div><div class="insight-card-detail"><strong>${formatShort(next[0])}</strong> — that's in ${dUntil} day${dUntil===1?'':'s'}.</div></div></div>`;
-  }
-
-  container.appendChild(grid);
-  container.appendChild(cards);
-  renderHistory(history);
-}
-
-function renderHistory(container) {
-  if (!userCycles.length) { container.innerHTML=''; return; }
-  const sorted=[...userCycles].sort((a,b)=>b.start_date.localeCompare(a.start_date));
-  const toggle=document.createElement('div'); toggle.className='history-toggle';
-  toggle.innerHTML=`<span class="history-toggle-title">📜 Cycle History (${userCycles.length})</span><span class="history-chevron" id="history-chevron">▼</span>`;
-  const body=document.createElement('div'); body.className='history-body'; body.id='history-body';
-  sorted.forEach((c,i)=>{
-    const s=c.start_date?parseDate(c.start_date):null;
-    const e=c.end_date?parseDate(c.end_date):null;
-    const dur=s&&e?daysBetween(s,e)+1:'—';
-    const row=document.createElement('div'); row.className='history-row';
-    row.innerHTML=`<span class="history-cycle-num">#${sorted.length-i}</span><span>${s?formatShort(s):'—'}</span><span>${dur} days</span>`;
-    body.appendChild(row);
-  });
-  toggle.onclick=()=>{ body.classList.toggle('open'); document.getElementById('history-chevron').classList.toggle('open'); };
-  container.innerHTML=''; container.appendChild(toggle); container.appendChild(body);
-}
-
-// ============================================================
-//  PROFILE
-// ============================================================
-function loadProfileScreen() {
-  if (!userProfile) return;
-  profileBuffer={ cycleLength:userProfile.cycle_length||28, periodLength:userProfile.period_length||5 };
-  document.getElementById('profile-name').value          = userProfile.name||'';
-  document.getElementById('profile-display-name').textContent = userProfile.name||'—';
-  document.getElementById('profile-email-display').textContent = currentUser?.email||'';
-  document.getElementById('profile-cycle-len').textContent  = profileBuffer.cycleLength;
-  document.getElementById('profile-period-len').textContent = profileBuffer.periodLength;
-}
-
-function adjustProfile(field, delta) {
-  const min=field==='cycleLength'?21:1, max=field==='cycleLength'?45:10;
-  profileBuffer[field]=Math.max(min,Math.min(max,profileBuffer[field]+delta));
-  document.getElementById(field==='cycleLength'?'profile-cycle-len':'profile-period-len').textContent=profileBuffer[field];
-}
-
-async function saveProfile() {
-  const name=document.getElementById('profile-name').value.trim();
-  if (!name) { showToast('Please enter your name'); return; }
-  const ok=await pushProfile({ name, cycle_length:profileBuffer.cycleLength, period_length:profileBuffer.periodLength });
-  if (ok) {
-    userProfile.name=name; userProfile.cycle_length=profileBuffer.cycleLength; userProfile.period_length=profileBuffer.periodLength;
-    document.getElementById('profile-display-name').textContent=name;
-    showToast('Profile saved ✓');
-  }
-}
-
-function confirmReset() {
-  const el=document.getElementById('confirm-modal');
-  el.style.display='flex';
-  requestAnimationFrame(()=>el.classList.add('visible'));
-}
-
-async function resetAllData() {
-  closeConfirm();
-  await deleteAllUserData();
-  showToast('All data cleared');
-  navigate('home');
-  setTimeout(()=>{
-    document.getElementById('ob-start-date').value=todayStr();
-    showModal('onboarding-modal'); setObStep(1);
-  },500);
-}
-
-// ============================================================
-//  TOAST
-// ============================================================
-let toastTimer=null;
-function showToast(msg) {
+function toast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200);
 }
 
-// ============================================================
-//  INIT
-// ============================================================
-document.addEventListener('DOMContentLoaded', () => {
-  initAuth();
-});
+/* ---------- D. AUTH ---------- */
+function buildChoices(){
+  const cg=document.getElementById('companion-grid');
+  cg.innerHTML = COMPANIONS.map(c=>`
+    <div class="choice ${c.id===pick.companion?'sel':''}" data-c="${c.id}" onclick="selectCompanion('${c.id}')">
+      <span class="emo">${c.emo}</span><span class="lbl">${c.name}</span>
+    </div>`).join('');
+  const zg=document.getElementById('zone-grid');
+  zg.innerHTML = ZONES.map(z=>`
+    <div class="choice ${z.id===pick.zone?'sel':''}" data-z="${z.id}" onclick="selectZone('${z.id}')">
+      <span class="emo">${z.emo}</span><span class="lbl">${z.name.split(' ')[0]}</span>
+    </div>`).join('');
+}
+function selectCompanion(id){ pick.companion=id; document.querySelectorAll('[data-c]').forEach(e=>e.classList.toggle('sel', e.dataset.c===id)); }
+function selectZone(id){ pick.zone=id; document.querySelectorAll('[data-z]').forEach(e=>e.classList.toggle('sel', e.dataset.z===id)); }
+
+async function createAccount(){
+  const name=document.getElementById('su-name').value.trim();
+  const email=document.getElementById('su-email').value.trim().toLowerCase();
+  const pass=document.getElementById('su-pass').value;
+  const err=document.getElementById('su-err');
+  const btn=document.getElementById('su-submit');
+  if(!name || !email || !pass){ err.textContent='Please fill in your name, email and password.'; return; }
+  if(!/^\S+@\S+\.\S+$/.test(email)){ err.textContent='That email looks a little off. Try again.'; return; }
+  if(pass.length<6){ err.textContent='Password needs at least 6 characters.'; return; }
+
+  err.textContent=''; btn.disabled=true; btn.textContent='Planting your garden…';
+  // Supabase Auth — name/companion/zone passed as metadata; a DB trigger
+  // creates the matching profile + garden rows automatically.
+  const { data, error } = await sb.auth.signUp({
+    email, password:pass,
+    options:{ data:{ name, companion:pick.companion, zone:pick.zone } }
+  });
+  btn.disabled=false; btn.textContent='Begin My Journey';
+  if(error){ err.textContent = error.message; return; }
+
+  if(!data.session){
+    // Email confirmation is enabled on the project — ask them to confirm.
+    err.style.color='#5E9576';
+    err.textContent='Almost there! Check your email to confirm, then sign in.';
+    setTimeout(()=>{ err.style.color=''; go('signin'); }, 2600);
+    return;
+  }
+  await loadData();
+  enterApp();
+  toast('Welcome to your garden, '+name+' 🌱');
+}
+
+async function signIn(){
+  const email=document.getElementById('si-email').value.trim().toLowerCase();
+  const pass=document.getElementById('si-pass').value;
+  const err=document.getElementById('si-err');
+  const { data, error } = await sb.auth.signInWithPassword({ email, password:pass });
+  if(!error && data.session){
+    err.textContent='';
+    await loadData();
+    enterApp();
+  } else {
+    err.textContent="We couldn't find your garden. Try again.";
+    const card=document.getElementById('signin-card');
+    card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+  }
+}
+
+async function signOut(){
+  await sb.auth.signOut();
+  state.user=null; state.habits=[]; state.logs=[]; state.garden={xp:0,weeklyStoryShown:0};
+  stopAllSounds();
+  go('splash');
+}
+
+function enterApp(){
+  nav('home');
+}
+
+/* ---------- E. GARDEN ENGINE ---------- */
+function getGarden(){ return store.get(LS.garden,{xp:0,weeklyStoryShown:0}); }
+function getLevel(xp){ return Math.min(6, Math.floor(xp / XP_PER_LEVEL) + 1); }
+function levelProgress(xp){
+  const lv=getLevel(xp);
+  if(lv>=6) return { lv, into:XP_PER_LEVEL, need:XP_PER_LEVEL, pct:100 };
+  const into = xp - (lv-1)*XP_PER_LEVEL;
+  return { lv, into, need:XP_PER_LEVEL, pct:Math.round(into/XP_PER_LEVEL*100) };
+}
+
+// Determine time-of-day bucket from real local time
+function timeOfDay(){
+  const h=new Date().getHours();
+  if(h>=5 && h<12) return 'morning';
+  if(h>=12 && h<17) return 'afternoon';
+  if(h>=17 && h<20) return 'evening';
+  return 'night';
+}
+function greetWord(){
+  const t=timeOfDay();
+  return t==='morning'?'Good Morning': t==='afternoon'?'Good Afternoon': t==='evening'?'Good Evening':'Good Night';
+}
+
+// Weather is derived from recent habit consistency + streak
+function computeWeather(){
+  const logs=store.get(LS.logs,[]);
+  const habits=store.get(LS.habits,[]);
+  if(!logs.length) return { id:'cloudy', emo:'☁️', label:'Cloudy', note:'Your garden is waiting for its first step.' };
+  // days since last activity
+  const last = logs.map(l=>l.date).sort().slice(-1)[0];
+  const idle = daysBetween(last, todayStr());
+  if(idle>=4) return { id:'rainy', emo:'🌧', label:'Rainy', note:'It has been quiet. A small habit brings the sun back.' };
+  // completions in last 7 days
+  const weekAgo = new Date(Date.now()-6*86400000).toISOString().slice(0,10);
+  const recent = logs.filter(l=>l.date>=weekAgo).length;
+  const streak = longestCurrentStreak();
+  if(streak>=7) return { id:'rainbow', emo:'🌈', label:'Rainbow', note:'An exceptional streak! Your garden is celebrating.' };
+  if(recent>=8) return { id:'sunny', emo:'☀️', label:'Sunny', note:'High consistency. Everything is in bloom.' };
+  if(recent>=3) return { id:'partly', emo:'🌤', label:'Partly Cloudy', note:'Good progress. Keep the breeze going.' };
+  return { id:'cloudy', emo:'☁️', label:'Cloudy', note:'A few missed steps. Today is a fresh start.' };
+}
+
+// Build the layered garden DOM. compact=true for home hero.
+function buildGarden(mountId, full){
+  const g=getGarden();
+  const lp=levelProgress(g.xp);
+  const tod=timeOfDay();
+  const weather=computeWeather();
+  const user=store.get(LS.user,{companion:'fox'});
+  const comp=COMPANIONS.find(c=>c.id===user.companion)||COMPANIONS[2];
+
+  const stageCls = `garden-stage ${full?'full':''} lv${lp.lv} ${tod} w-${weather.id}`;
+
+  // stars
+  let stars=''; for(let i=0;i<40;i++){ stars+=`<span class="star" style="top:${Math.random()*55}%;left:${Math.random()*100}%;animation-delay:${(Math.random()*3).toFixed(1)}s"></span>`; }
+  // fireflies
+  let fireflies=''; for(let i=0;i<8;i++){ fireflies+=`<span class="firefly" style="bottom:${90+Math.random()*60}px;left:${15+Math.random()*70}%;animation-delay:${(Math.random()*9).toFixed(1)}s"></span>`; }
+  // rain drops
+  let drops=''; for(let i=0;i<50;i++){ drops+=`<span class="drop" style="left:${Math.random()*100}%;animation-duration:${(0.5+Math.random()*0.6).toFixed(2)}s;animation-delay:${(Math.random()*1).toFixed(2)}s"></span>`; }
+  // flowers — number grows with level
+  const flowerCount = [0,0,3,6,9,12,16][lp.lv];
+  const flowerColors=['#E59ABF','#F2C14E','#C8B6E2','#EF8F77','#9BD49B','#F5A9C1'];
+  let flowers='';
+  for(let i=0;i<flowerCount;i++){
+    const x = 10 + Math.random()*80;
+    const c = flowerColors[i%flowerColors.length];
+    const d = (Math.random()*0.6).toFixed(2);
+    flowers+=`<div class="flower" style="left:${x}%; bottom:${66+Math.random()*16}px; opacity:1; transform:scale(${(0.7+Math.random()*0.6).toFixed(2)}); transition-delay:${d}s">
+      <span class="stalk"></span><span class="petal" style="background:${c}"></span></div>`;
+  }
+
+  // Plant: sprout for lv1, tree from lv2+
+  let plant='';
+  if(lp.lv===1){
+    plant = `<div class="sprout"><span class="leaf-s l"></span><span class="leaf-s r"></span><div class="stem" style="height:46px"></div></div>`;
+  } else {
+    const trunkH = [0,0,40,70,100,140,170][lp.lv];
+    const trunkW = [0,0,12,16,20,26,32][lp.lv];
+    const canopyS = [0,0,70,110,150,200,250][lp.lv];
+    plant = `
+      <div class="trunk" style="height:${trunkH}px;width:${trunkW}px"></div>
+      <div class="canopy" style="width:${canopyS}px;height:${canopyS}px;bottom:${trunkH-10}px;transform:translate(-50%,0) scale(1)"></div>
+      ${lp.lv>=6?`<div class="tree-glow" style="width:${canopyS*1.6}px;height:${canopyS*1.6}px;bottom:${trunkH}px;opacity:.9"></div>`:''}
+    `;
+  }
+
+  // Zone hotspots (only in full view), positioned around ground
+  let zoneDots='';
+  if(full){
+    const positions=[
+      {left:'10%',bottom:'18px'},{left:'78%',bottom:'30px'},{left:'24%',bottom:'8px'},
+      {left:'62%',bottom:'10px'},{left:'44%',bottom:'24px'}
+    ];
+    (user.zones||[]).forEach((zid,i)=>{
+      const z=ZONES.find(x=>x.id===zid); if(!z) return;
+      const p=positions[i%positions.length];
+      zoneDots+=`<div class="zone-dot" style="left:${p.left};bottom:${p.bottom}" onclick="openZoneModal('${z.id}')"><span class="ring"></span>${z.emo}</div>`;
+    });
+  }
+
+  const html=`
+    <div class="${stageCls}" id="${full?'stage-full':'stage-home'}">
+      <div class="sky ${tod}">
+        <div class="celestial"></div>
+        <div class="stars">${stars}</div>
+        <div class="clouds" style="opacity:${weather.id==='sunny'||weather.id==='rainbow'?0.5:1}">
+          <span class="cloud c1"></span><span class="cloud c2"></span><span class="cloud c3"></span>
+        </div>
+        <div class="rainbow ${weather.id==='rainbow'?'on':''}"></div>
+      </div>
+
+      <div class="hill back"></div>
+      <div class="hill mid"></div>
+
+      <!-- birds & butterflies -->
+      <span class="critter bird">🐦</span>
+      <span class="critter butterfly">🦋</span>
+      <span class="critter butterfly" style="top:150px;animation-delay:6s">🦋</span>
+      ${fireflies}
+
+      <div class="ground">
+        <div class="path ${lp.lv>=3?'':''}" style="opacity:${lp.lv>=3?1:0}">
+          <span class="stone"></span><span class="stone"></span><span class="stone"></span><span class="stone"></span>
+        </div>
+      </div>
+      <div class="soil-patch"></div>
+
+      ${flowers}
+
+      <div class="stream" style="opacity:${lp.lv>=5?1:0}"><div class="water"></div></div>
+
+      <div class="plant">${plant}</div>
+
+      <!-- companion living in the garden -->
+      <div class="companion-sprite" title="${comp.name}">${comp.emo}</div>
+
+      <!-- weather rain layer -->
+      <div class="rain ${weather.id==='rainy'?'on':''}">${drops}</div>
+      <div class="weather-veil"></div>
+
+      ${zoneDots}
+
+      <div class="weather-badge">${weather.emo} ${weather.label}</div>
+      <div class="daynight-badge">${tod==='morning'?'☀️ Morning':tod==='afternoon'?'🌤 Afternoon':tod==='evening'?'🌅 Evening':'🌙 Night'}</div>
+
+      <div class="garden-hud">
+        <div class="spread">
+          <span class="lvl-name">${LEVELS[lp.lv-1].emo} Level ${lp.lv} · ${LEVELS[lp.lv-1].name}</span>
+          <span class="xp">${lp.lv>=6?'MAX':lp.into+' / '+lp.need+' XP'}</span>
+        </div>
+        <div class="xp-bar"><span style="width:${lp.pct}%"></span></div>
+      </div>
+    </div>`;
+
+  document.getElementById(mountId).innerHTML = html;
+}
+
+// Petal burst animation on level up
+function petalBurst(stageId){
+  const stage=document.getElementById(stageId);
+  if(!stage) return;
+  const burst=document.createElement('div');
+  burst.className='petal-burst';
+  const petals=['🌸','🌷','🌼','💮','🍃'];
+  for(let i=0;i<22;i++){
+    const p=document.createElement('span');
+    p.className='pt'; p.textContent=petals[i%petals.length];
+    p.style.left=(Math.random()*100)+'%';
+    p.style.top=(-20-Math.random()*40)+'px';
+    p.style.animationDelay=(Math.random()*0.8).toFixed(2)+'s';
+    burst.appendChild(p);
+  }
+  stage.appendChild(burst);
+  setTimeout(()=>burst.remove(),3400);
+}
+
+/* ---------- F. HOME DASHBOARD ---------- */
+function renderHome(){
+  const user=store.get(LS.user,{name:'Friend',companion:'fox',zones:['wellness']});
+  const comp=COMPANIONS.find(c=>c.id===user.companion)||COMPANIONS[2];
+
+  document.getElementById('greeting-text').textContent = greetWord()+', '+user.name;
+  document.getElementById('home-companion-ico').textContent = comp.emo;
+  document.getElementById('home-comp-av').textContent = comp.emo;
+  document.getElementById('home-comp-name').textContent = comp.name;
+  document.getElementById('home-comp-msg').textContent = companionMessage();
+
+  // affirmation — one per day (stable by date)
+  const idx = dateSeed() % AFFIRMATIONS.length;
+  document.getElementById('affirmation').textContent = AFFIRMATIONS[idx];
+
+  // goal insight — most active zone
+  const mz = mostActiveZone();
+  const z = ZONES.find(x=>x.id===mz) || ZONES.find(x=>x.id===(user.zones||[])[0]) || ZONES[2];
+  document.getElementById('goal-insight').textContent = z.tip;
+
+  buildGarden('home-garden-mount', false);
+}
+
+function dateSeed(){
+  const d=new Date(); return d.getFullYear()*1000 + (d.getMonth()*31 + d.getDate());
+}
+function companionMessage(){
+  const logs=store.get(LS.logs,[]);
+  const comp=COMPANIONS.find(c=>c.id===(store.get(LS.user,{}).companion))||COMPANIONS[2];
+  const todays = logs.filter(l=>l.date===todayStr());
+  if(todays.length){
+    const z=ZONES.find(x=>x.id===todays[todays.length-1].zone);
+    return `Your ${z?z.name:'garden'} grew today. Keep going.`;
+  }
+  if(logs.length===0) return 'Plant your first habit and watch me come alive.';
+  return 'You showed up again. Your garden noticed.';
+}
+
+/* ---------- E2. FULL GARDEN ---------- */
+function renderFullGarden(){ buildGarden('full-garden-mount', true); }
+
+function openZoneModal(zid){
+  const z=ZONES.find(x=>x.id===zid); if(!z) return;
+  const habits=store.get(LS.habits,[]).filter(h=>h.zone===zid);
+  const logs=store.get(LS.logs,[]).filter(l=>l.zone===zid);
+  const zlvl = getLevel(logs.length*10);
+  const recent = logs.slice(-3).reverse();
+  document.getElementById('zone-modal').innerHTML=`
+    <div class="center" style="font-size:40px">${z.emo}</div>
+    <h2 class="center" style="margin:4px 0 2px">${z.name}</h2>
+    <p class="center muted" style="font-size:13px">Zone Level ${zlvl} · ${logs.length} completions</p>
+    <p class="section-title" style="margin-top:16px">Active Habits</p>
+    ${habits.length? habits.map(h=>`<div class="habit"><div class="habit-info"><div class="hn">${h.name}</div><div class="hf">${h.freq} · 🔥 ${h.streak||0} streak</div></div></div>`).join('') : '<p class="muted" style="font-size:14px">No habits here yet. Add one in Habits.</p>'}
+    <p class="section-title" style="margin-top:14px">Recent Completions</p>
+    ${recent.length? recent.map(l=>`<p class="muted" style="font-size:13.5px">✓ ${l.name||'Habit'} · ${l.date}</p>`).join('') : '<p class="muted" style="font-size:14px">Nothing yet — your next step starts here.</p>'}
+    <button class="btn" style="margin-top:16px" onclick="closeZoneModal()">Close</button>`;
+  document.getElementById('zone-modal-scrim').classList.add('open');
+}
+function closeZoneModal(e){
+  if(e && e.target.closest('#zone-modal') && e.type==='click' && e.target.id!=='zone-modal') return;
+  document.getElementById('zone-modal-scrim').classList.remove('open');
+}
+
+/* ---------- G. HABITS & GOALS ---------- */
+function renderHabits(){
+  const user=store.get(LS.user,{zones:[]});
+  const habits=store.get(LS.habits,[]);
+  const wrap=document.getElementById('habits-list');
+  const activeZones = (user.zones&&user.zones.length)?user.zones:['wellness'];
+
+  wrap.innerHTML = activeZones.map(zid=>{
+    const z=ZONES.find(x=>x.id===zid); if(!z) return '';
+    const zh = habits.filter(h=>h.zone===zid);
+    const logs=store.get(LS.logs,[]).filter(l=>l.zone===zid);
+    const lvl=getLevel(logs.length*10);
+    const pct = Math.min(100, (logs.length%8)/8*100);
+    return `
+    <div class="card zone-card" id="zc-${zid}">
+      <div class="zone-head" onclick="toggleZone('${zid}')">
+        <div class="zemo">${z.emo}</div>
+        <div class="ztitle"><b>${z.name}</b><div class="zlvl">Level ${lvl} · ${zh.length} habit${zh.length!==1?'s':''}</div>
+          <div class="zmeter"><span style="width:${pct}%"></span></div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="zone-body">
+        ${zh.length? zh.map(h=>habitRow(h)).join('') : '<p class="muted" style="font-size:14px">No habits yet — add your first below.</p>'}
+        <div class="add-habit-row">
+          <input class="input" id="new-${zid}" placeholder="New habit…" />
+          <select class="input freq" id="freq-${zid}"><option value="daily">Daily</option><option value="weekly">Weekly</option></select>
+          <button class="mini-btn" onclick="addHabit('${zid}')">+</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  wrap.innerHTML += `<p class="foot-note">Add or remove goal zones in your Profile.</p>`;
+}
+
+function habitRow(h){
+  const done = isDoneToday(h.id);
+  return `
+  <div class="habit">
+    <div class="check ${done?'done':''}" onclick="toggleHabit('${h.id}')"></div>
+    <div class="habit-info ${done?'done':''}">
+      <div class="hn">${h.name}</div>
+      <div class="hf">${h.freq}</div>
+    </div>
+    <div class="streak-badge">🔥 ${h.streak||0}</div>
+  </div>`;
+}
+
+function toggleZone(zid){
+  const c=document.getElementById('zc-'+zid);
+  c.classList.toggle('open');
+}
+
+async function addHabit(zid){
+  const inp=document.getElementById('new-'+zid);
+  const name=inp.value.trim();
+  if(!name){ inp.focus(); return; }
+  const freq=document.getElementById('freq-'+zid).value;
+  inp.value='';
+  const { data, error } = await sb.from('habits')
+    .insert({ user_id: state.user.id, name, zone:zid, freq })
+    .select().single();
+  if(error){ toast('Could not save habit. Try again.'); return; }
+  state.habits.push({ id:data.id, name:data.name, zone:data.zone, freq:data.freq, streak:0, lastDone:null });
+  renderHabits();
+  document.getElementById('zc-'+zid).classList.add('open');
+  toast('Habit planted 🌱');
+}
+
+function isDoneToday(hid){
+  const logs=store.get(LS.logs,[]);
+  return logs.some(l=>l.habitId===hid && l.date===todayStr());
+}
+
+async function toggleHabit(hid){
+  const h=state.habits.find(x=>x.id===hid); if(!h) return;
+  const uid=state.user.id;
+  const done=isDoneToday(hid);
+  const g=getGarden();
+  const beforeLevel=getLevel(g.xp);
+
+  if(done){
+    // undo today's completion
+    await sb.from('logs').delete().eq('habit_id',hid).eq('date',todayStr());
+    state.logs=state.logs.filter(l=>!(l.habitId===hid && l.date===todayStr()));
+    h.streak=Math.max(0,(h.streak||0)-1);
+    g.xp=Math.max(0,g.xp-10);
+    await sb.from('habits').update({ streak:h.streak }).eq('id',hid);
+  } else {
+    const { data:log, error } = await sb.from('logs')
+      .insert({ user_id:uid, habit_id:hid, name:h.name, zone:h.zone, date:todayStr() })
+      .select().single();
+    if(error){ toast('Could not save. Try again.'); return; }
+    state.logs.push({ id:log.id, habitId:hid, name:h.name, zone:h.zone, date:todayStr() });
+    // streak: increment if last done was yesterday, else reset to 1
+    if(h.lastDone){
+      const gap=daysBetween(h.lastDone, todayStr());
+      h.streak = gap===1 ? (h.streak||0)+1 : 1;
+    } else { h.streak=1; }
+    h.lastDone=todayStr();
+    g.xp+=10;
+    await sb.from('habits').update({ streak:h.streak, last_done:h.lastDone }).eq('id',hid);
+  }
+  store.set(LS.garden,g);
+  await sb.from('garden').update({ xp:g.xp }).eq('user_id',uid);
+
+  const afterLevel=getLevel(g.xp);
+  renderHabits();
+  if(!done && afterLevel>beforeLevel){
+    toast('🌳 Your garden grew to Level '+afterLevel+'!');
+    nav('garden');
+    setTimeout(()=>petalBurst('stage-full'),300);
+  } else if(!done){
+    autoSelectSoundscape();
+  }
+}
+
+function longestCurrentStreak(){
+  const habits=store.get(LS.habits,[]);
+  return habits.reduce((m,h)=>Math.max(m,h.streak||0),0);
+}
+function mostActiveZone(){
+  const logs=store.get(LS.logs,[]);
+  const counts={};
+  logs.forEach(l=>counts[l.zone]=(counts[l.zone]||0)+1);
+  let best=null,n=-1;
+  Object.keys(counts).forEach(z=>{ if(counts[z]>n){ n=counts[z]; best=z; } });
+  return best;
+}
+
+/* ---------- H. INSIGHTS ---------- */
+function renderInsights(){
+  const wrap=document.getElementById('insights-list');
+  const logs=store.get(LS.logs,[]);
+  const user=store.get(LS.user,{created:todayStr()});
+  const habits=store.get(LS.habits,[]);
+  const daysActive = daysBetween(user.created, todayStr());
+
+  if(logs.length===0){
+    wrap.innerHTML=`<div class="card center"><div style="font-size:40px">🌱</div><p style="margin-top:8px">Check back after a few days — your insights are growing.</p></div>`;
+    return;
+  }
+
+  const weekAgo=new Date(Date.now()-6*86400000).toISOString().slice(0,10);
+  const weekCount=logs.filter(l=>l.date>=weekAgo).length;
+  const longest=longestCurrentStreak();
+  const mz=mostActiveZone();
+  const mzName=(ZONES.find(z=>z.id===mz)||{}).name||'—';
+
+  // least active among user's zones
+  const counts={}; (user.zones||[]).forEach(z=>counts[z]=0);
+  logs.forEach(l=>{ if(counts[l.zone]!==undefined) counts[l.zone]++; });
+  let least=null,low=Infinity;
+  Object.keys(counts).forEach(z=>{ if(counts[z]<low){ low=counts[z]; least=z; } });
+  const leastName=(ZONES.find(z=>z.id===least)||{}).name||'a zone';
+
+  let html=`
+    <div class="card insight"><span class="ico">🌿</span><div><b>${weekCount}</b><div class="muted">habits completed this week</div></div></div>
+    <div class="card insight"><span class="ico">🔥</span><div><b>${longest} day${longest!==1?'s':''}</b><div class="muted">your longest current streak</div></div></div>
+    <div class="card insight"><span class="ico">⭐</span><div><b style="font-size:18px">${mzName}</b><div class="muted">your most consistent zone</div></div></div>
+    <div class="card insight"><span class="ico">💧</span><div><b style="font-size:18px">${leastName}</b><div class="muted">needs a little attention this week</div></div></div>
+  `;
+
+  // Weekly Garden Story (after 7 days of data)
+  if(daysActive>=7){
+    html += `
+    <div class="card story-card">
+      <p class="section-title" style="margin-bottom:8px">Weekly Garden Story</p>
+      <p>This week you completed ${weekCount} habit${weekCount!==1?'s':''} and held a ${longest}-day streak.
+      Your ${mzName} bloomed with new growth, while your ${leastName} is waiting for you.
+      Your garden is becoming more beautiful — and so are you.</p>
+    </div>`;
+  } else {
+    html += `<p class="foot-note">Your Weekly Garden Story unlocks after 7 days (${7-daysActive} to go).</p>`;
+  }
+
+  wrap.innerHTML=html;
+}
+
+/* ---------- I. PROFILE ---------- */
+function renderProfile(){
+  const user=store.get(LS.user,{name:'Friend',email:'',companion:'fox',zones:[]});
+  const comp=COMPANIONS.find(c=>c.id===user.companion)||COMPANIONS[2];
+  const g=getGarden();
+  const lvl=getLevel(g.xp);
+  const totalDone=store.get(LS.logs,[]).length;
+
+  const body=document.getElementById('profile-body');
+  body.innerHTML=`
+    <div class="profile-head">
+      <div class="av">${comp.emo}</div>
+      <h2>${user.name}</h2>
+      <p class="muted" style="font-size:13.5px">${user.email}</p>
+    </div>
+
+    <div class="stat-row" style="margin-bottom:16px">
+      <div class="card"><b>${LEVELS[lvl-1].emo} ${lvl}</b><span>Garden Level</span></div>
+      <div class="card"><b>${totalDone}</b><span>Habits Done</span></div>
+    </div>
+
+    <div class="card">
+      <p class="section-title">Your Companion</p>
+      <div class="choice-grid">
+        ${COMPANIONS.map(c=>`<div class="choice ${c.id===user.companion?'sel':''}" onclick="changeCompanion('${c.id}')"><span class="emo">${c.emo}</span><span class="lbl">${c.name}</span></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="section-title">Active Goal Zones</p>
+      ${ZONES.map(z=>`
+        <div class="zone-toggle">
+          <div class="row"><span style="font-size:22px">${z.emo}</span><span style="font-weight:500">${z.name}</span></div>
+          <div class="toggle ${(user.zones||[]).includes(z.id)?'on':''}" onclick="toggleZoneActive('${z.id}')"></div>
+        </div>`).join('')}
+    </div>
+
+    <button class="btn secondary" onclick="signOut()">Sign Out</button>
+    <p class="foot-note">Soul Garden stores everything privately on your device.</p>
+  `;
+}
+async function changeCompanion(id){
+  const user=store.get(LS.user,{}); user.companion=id; store.set(LS.user,user);
+  renderProfile();
+  await sb.from('profiles').update({ companion:id, updated_at:new Date().toISOString() }).eq('id',user.id);
+  toast('Companion changed 🐾');
+}
+async function toggleZoneActive(zid){
+  const user=store.get(LS.user,{zones:[]});
+  user.zones=user.zones||[];
+  if(user.zones.includes(zid)){
+    if(user.zones.length<=1){ toast('Keep at least one zone growing 🌱'); return; }
+    user.zones=user.zones.filter(z=>z!==zid);
+  } else {
+    user.zones.push(zid);
+  }
+  store.set(LS.user,user);
+  renderProfile();
+  await sb.from('profiles').update({ zones:user.zones, updated_at:new Date().toISOString() }).eq('id',user.id);
+}
+
+/* ---------- J. AMBIENT SOUND (WebAudio synthesis) ---------- */
+let audioCtx=null, masterGain=null, muted=false, volume=0.55;
+const activeSounds={}; // id -> {nodes, gain}
+
+function ensureAudio(){
+  if(!audioCtx){
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    masterGain=audioCtx.createGain();
+    masterGain.gain.value=muted?0:volume;
+    masterGain.connect(audioCtx.destination);
+  }
+  if(audioCtx.state==='suspended') audioCtx.resume();
+}
+
+// white/pink noise buffer
+function noiseBuffer(){
+  const len=audioCtx.sampleRate*2;
+  const buf=audioCtx.createBuffer(1,len,audioCtx.sampleRate);
+  const d=buf.getChannelData(0);
+  let last=0;
+  for(let i=0;i<len;i++){
+    const white=Math.random()*2-1;
+    last=(last+0.02*white)/1.02; d[i]=last*3.5; // pink-ish
+  }
+  return buf;
+}
+
+// Build a sound source for an id
+function makeSound(id){
+  ensureAudio();
+  const g=audioCtx.createGain(); g.gain.value=0; g.connect(masterGain);
+  const nodes=[];
+
+  if(id==='rain' || id==='wind' || id==='leaves' || id==='stream'){
+    const src=audioCtx.createBufferSource(); src.buffer=noiseBuffer(); src.loop=true;
+    const filt=audioCtx.createBiquadFilter();
+    if(id==='rain'){ filt.type='lowpass'; filt.frequency.value=2600; }
+    if(id==='wind'){ filt.type='lowpass'; filt.frequency.value=600; }
+    if(id==='leaves'){ filt.type='bandpass'; filt.frequency.value=3500; filt.Q.value=0.7; }
+    if(id==='stream'){ filt.type='bandpass'; filt.frequency.value=1800; filt.Q.value=0.4; }
+    src.connect(filt); filt.connect(g); src.start();
+    nodes.push(src);
+    // gentle LFO on wind for movement
+    if(id==='wind'){
+      const lfo=audioCtx.createOscillator(); const lg=audioCtx.createGain();
+      lfo.frequency.value=0.1; lg.gain.value=300; lfo.connect(lg); lg.connect(filt.frequency); lfo.start();
+      nodes.push(lfo);
+    }
+  }
+  else if(id==='birds'){
+    // intermittent chirps via scheduled oscillator
+    const timer=setInterval(()=>{
+      if(audioCtx.state!=='running') return;
+      const o=audioCtx.createOscillator(); const og=audioCtx.createGain();
+      o.type='sine'; const base=1800+Math.random()*1400;
+      o.frequency.setValueAtTime(base,audioCtx.currentTime);
+      o.frequency.linearRampToValueAtTime(base+400,audioCtx.currentTime+0.08);
+      og.gain.setValueAtTime(0,audioCtx.currentTime);
+      og.gain.linearRampToValueAtTime(0.25,audioCtx.currentTime+0.02);
+      og.gain.linearRampToValueAtTime(0,audioCtx.currentTime+0.16);
+      o.connect(og); og.connect(g); o.start(); o.stop(audioCtx.currentTime+0.2);
+    }, 600+Math.random()*400);
+    nodes.push({stop:()=>clearInterval(timer)});
+  }
+  else if(id==='nature'){
+    // combo: soft noise + birds handled by enabling others; here add light pad
+    const src=audioCtx.createBufferSource(); src.buffer=noiseBuffer(); src.loop=true;
+    const filt=audioCtx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=1400;
+    src.connect(filt); filt.connect(g); src.start(); nodes.push(src);
+  }
+
+  // fade in
+  g.gain.linearRampToValueAtTime(0.6, audioCtx.currentTime+0.8);
+  return { nodes, gain:g };
+}
+
+function toggleSound(id){
+  if(activeSounds[id]){
+    stopSound(id);
+  } else {
+    activeSounds[id]=makeSound(id);
+  }
+  refreshSoundUI();
+}
+function stopSound(id){
+  const s=activeSounds[id]; if(!s) return;
+  try{
+    s.gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime+0.4);
+    setTimeout(()=>{ s.nodes.forEach(n=>{ try{ n.stop&&n.stop(); }catch(e){} }); },450);
+  }catch(e){}
+  delete activeSounds[id];
+}
+function stopAllSounds(){ Object.keys(activeSounds).forEach(stopSound); refreshSoundUI&&refreshSoundUI(); }
+
+function setVolume(v){
+  volume=v/100;
+  if(masterGain && !muted) masterGain.gain.value=volume;
+}
+function toggleMute(){
+  muted=!muted;
+  if(masterGain) masterGain.gain.value=muted?0:volume;
+  document.getElementById('mute-btn').textContent=muted?'🔇':'🔊';
+}
+
+function buildSoundGrid(){
+  document.getElementById('sound-grid').innerHTML=SOUNDS.map(s=>`
+    <div class="sound" id="snd-${s.id}" onclick="toggleSound('${s.id}')">
+      <div class="se">${s.emo}</div><div class="sl">${s.name}</div>
+    </div>`).join('');
+}
+function refreshSoundUI(){
+  SOUNDS.forEach(s=>{
+    const el=document.getElementById('snd-'+s.id);
+    if(el) el.classList.toggle('on', !!activeSounds[s.id]);
+  });
+  const on=Object.keys(activeSounds).map(id=>(SOUNDS.find(s=>s.id===id)||{}).name).filter(Boolean);
+  document.getElementById('active-sound-label').textContent = on.length? 'Playing: '+on.join(' + ') : 'No soundscape playing';
+}
+
+// Auto-select soundscape based on weather + time
+function autoSelectSoundscape(){
+  // Only suggest if nothing is playing
+  if(Object.keys(activeSounds).length) return;
+}
+function openDrawer(){
+  buildSoundGrid();
+  // suggest a soundscape combination based on weather/time (only on first open)
+  if(!Object.keys(activeSounds).length){
+    const tod=timeOfDay(); const w=computeWeather();
+    let suggest=[];
+    if(tod==='night') suggest=['stream'];          // crickets/stream calm
+    else if(w.id==='rainy') suggest=['rain','wind'];
+    else if(w.id==='sunny'||w.id==='rainbow') suggest=['birds','stream','wind'];
+    else suggest=['leaves'];
+    suggest.forEach(id=>{ activeSounds[id]=makeSound(id); });
+  }
+  refreshSoundUI();
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-scrim').classList.add('open');
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-scrim').classList.remove('open');
+}
+
+/* ---------- K. BOOT ---------- */
+async function boot(){
+  buildChoices();
+  // Resume an existing Supabase session if present, otherwise show splash.
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session){
+    await loadData();
+    enterApp();
+  } else {
+    go('splash');
+  }
+}
+document.addEventListener('DOMContentLoaded', boot);
+
+// ═══════════ ONBOARDING ═══════════
+(function(){
+  const ZONE_PLANTS = { wellness:'🌱', wisdom:'🌳', selflove:'🌸', peace:'🍃', creativity:'🌻', strength:'🌵' };
+  let obStep = 0;
+  let obData = { name:'', email:'', pass:'', companion:'fox', zones:['wellness'] };
+
+  function obShow(){ document.getElementById('ob-overlay').classList.add('show'); }
+  function obHide(){ document.getElementById('ob-overlay').classList.remove('show'); }
+
+  // intercept the original "Create Account" button on splash
+  const origBtn = document.querySelector('.splash-btns .btn.secondary');
+  if(origBtn){ origBtn.onclick = function(){ obStep=0; obShow(); obGoTo(0); }; }
+
+  window.obNext = function(){ obGoTo(obStep+1); };
+
+  window.obGoTo = function(step){
+    const cur = document.getElementById('ob-'+obStep);
+    const nxt = document.getElementById('ob-'+step);
+    if(!nxt) return;
+    cur.classList.add('exit');
+    setTimeout(()=>{
+      cur.classList.remove('active','exit'); cur.classList.add('hidden');
+      nxt.classList.remove('hidden');
+      requestAnimationFrame(()=>nxt.classList.add('active'));
+    }, 320);
+    obStep = step;
+    document.querySelectorAll('.ob-dot').forEach((d,i)=>d.classList.toggle('active',i===step));
+    if(step===4) obConfetti();
+  };
+
+  window.obPickComp = function(el){
+    document.querySelectorAll('.ob-companion').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+    obData.companion = el.dataset.c;
+  };
+
+  window.obToggleZone = function(el){
+    const z = el.dataset.z;
+    if(el.classList.contains('selected')){
+      if(obData.zones.length<=1) return;
+      el.classList.remove('selected');
+      obData.zones = obData.zones.filter(x=>x!==z);
+    } else {
+      el.classList.add('selected');
+      obData.zones.push(z);
+    }
+  };
+
+  window.obStep1 = async function(){
+    const name = document.getElementById('ob-name').value.trim();
+    const email = document.getElementById('ob-email').value.trim().toLowerCase();
+    const pass = document.getElementById('ob-pass').value;
+    const errEl = document.getElementById('ob-err-1');
+    const btn = document.getElementById('ob-btn-1');
+    if(!name||!email||!pass){ errEl.textContent='Please fill in all fields.'; errEl.style.display='block'; return; }
+    if(!/^\S+@\S+\.\S+$/.test(email)){ errEl.textContent='That email looks a little off.'; errEl.style.display='block'; return; }
+    if(pass.length<6){ errEl.textContent='Password needs at least 6 characters.'; errEl.style.display='block'; return; }
+    errEl.style.display='none';
+    obData.name=name; obData.email=email; obData.pass=pass;
+    btn.textContent='Creating…'; btn.disabled=true;
+    const { data, error } = await sb.auth.signUp({
+      email, password:pass,
+      options:{ data:{ name, companion:'fox', zone:'wellness' } }
+    });
+    btn.textContent='Continue →'; btn.disabled=false;
+    if(error){ errEl.textContent=error.message.includes('already')?'This email already has a garden. Sign in instead.':error.message; errEl.style.display='block'; return; }
+    window._obAuthData = data;
+    obGoTo(2);
+  };
+
+  window.obStep3 = async function(){
+    const btn = document.getElementById('ob-btn-3');
+    btn.textContent='Planting…'; btn.disabled=true;
+    const authData = window._obAuthData;
+    if(authData && authData.user){
+      await sb.from('profiles').upsert({
+        id: authData.user.id,
+        name: obData.name,
+        companion: obData.companion,
+        zones: obData.zones,
+        onboarding_completed: false
+      });
+    }
+    btn.textContent='Plant these seeds →'; btn.disabled=false;
+    document.getElementById('ob-celeb-name').textContent = obData.name+"'s garden is ready! 🌱";
+    const preview = document.getElementById('ob-preview');
+    preview.innerHTML = obData.zones.slice(0,4).map(z=>'<span style="font-size:2rem">'+(ZONE_PLANTS[z]||'🌱')+'</span>').join('');
+    obGoTo(4);
+  };
+
+  window.obEnterGarden = async function(){
+    const authData = window._obAuthData;
+    if(authData && authData.user){
+      await sb.from('profiles').update({
+        onboarding_completed:true,
+        companion: obData.companion,
+        zones: obData.zones,
+        name: obData.name
+      }).eq('id', authData.user.id);
+    }
+    obHide();
+    // Pre-fill the original hidden signup form so the original app flow completes
+    document.getElementById('su-name').value = obData.name;
+    document.getElementById('su-email').value = obData.email;
+    document.getElementById('su-pass').value = obData.pass;
+    // Sync companion + zone picks into the original pick object
+    if(window.pick){
+      pick.companion = obData.companion;
+      pick.zone = obData.zones[0];
+    }
+    // If we already have a session, just load data and enter
+    if(authData && authData.session){
+      await loadData();
+      enterApp();
+      if(typeof toast==='function') toast('Welcome to your garden, '+obData.name+' 🌱');
+    } else {
+      // Shouldn't happen with email confirm off, but fallback: go to signin
+      go('signin');
+    }
+  };
+
+  window.obSkipToSignIn = function(){
+    obHide();
+    go('signin');
+  };
+
+  function obConfetti(){
+    const colors=['#7BAF8E','#c8a96e','#a8d4f0','#f5d878','#c8a0f0','#f5a8c8'];
+    const cont = document.getElementById('ob-4');
+    for(let i=0;i<28;i++){
+      const el=document.createElement('div');
+      el.className='confetti-p';
+      el.style.cssText='left:'+Math.random()*100+'%;top:'+(Math.random()*-20)+'px;background:'+colors[i%colors.length]+';animation-delay:'+Math.random()+'s;animation-duration:'+(2+Math.random())+'s;transform:rotate('+Math.random()*360+'deg)';
+      cont.appendChild(el);
+    }
+  }
+
+  // Check on load: if user is already logged in and onboarding done, skip overlay entirely
+  // If not, let the original app show splash (Sign In / Create Account)
+})();
+
 </script>
+
+<!-- First-visit companion tour (ADDITIVE — wraps enterApp/renderProfile, edits nothing) -->
+<script src="tour.js"></script>
 </body>
 </html>

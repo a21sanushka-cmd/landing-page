@@ -1,0 +1,168 @@
+/* ============================================================
+   SOUL GARDEN — FIRST-VISIT COMPANION TOUR  (ADDITIVE LAYER)
+   ------------------------------------------------------------
+   Purely additive. Nothing here restyles existing app elements;
+   every selector is namespaced with `sgtour-`. Colors, radius,
+   shadow, easing and fonts are inherited from the app's :root
+   tokens so the overlay feels native. Delete this file (and the
+   <link>/<script> lines in index.html) and the app is unchanged.
+============================================================ */
+
+#sgtour-root{
+  position:fixed; inset:0; z-index:9500;
+  display:none;
+  font-family:'DM Sans', system-ui, sans-serif;
+}
+#sgtour-root.show{ display:block; }
+
+/* Click-blocking layer. Transparent in spotlight mode (the dim
+   comes from the spot's box-shadow); softly tinted in centered mode. */
+.sgtour-backdrop{
+  position:fixed; inset:0; z-index:9500;
+  background:transparent;
+  transition:background .45s var(--ease, ease);
+}
+#sgtour-root.centered .sgtour-backdrop{
+  background:linear-gradient(160deg, rgba(20,38,26,.82) 0%, rgba(14,26,16,.88) 100%);
+  -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);
+}
+
+/* The spotlight "hole" — a transparent box whose enormous box-shadow
+   dims everything else. pointer-events:none so it never blocks. */
+.sgtour-spot{
+  position:fixed; z-index:9501; pointer-events:none;
+  border-radius:16px;
+  box-shadow:0 0 0 9999px rgba(14,26,16,.70);
+  outline:2px solid rgba(123,175,142,.85);   /* --primary glow ring */
+  outline-offset:3px;
+  opacity:0;
+  transition:top .5s var(--ease, ease), left .5s var(--ease, ease),
+             width .5s var(--ease, ease), height .5s var(--ease, ease),
+             opacity .35s ease;
+}
+#sgtour-root.spot .sgtour-spot{ opacity:1; }
+#sgtour-root.centered .sgtour-spot{ opacity:0; }
+
+/* gentle breathing ring */
+.sgtour-spot::after{
+  content:""; position:absolute; inset:-3px; border-radius:18px;
+  box-shadow:0 0 0 0 rgba(123,175,142,.45);
+  animation:sgtourPulse 2.4s var(--ease, ease) infinite;
+}
+
+/* The companion's speech card */
+.sgtour-card{
+  position:fixed; z-index:9502;
+  width:calc(100vw - 32px); max-width:340px;
+  background:var(--card, #fff);
+  border-radius:var(--radius, 18px);
+  box-shadow:var(--shadow, 0 10px 30px rgba(58,58,58,.18));
+  padding:18px 18px 16px;
+  display:flex; gap:13px; align-items:flex-start;
+  opacity:0; transform:translateY(8px);
+  transition:opacity .4s var(--ease, ease), transform .4s var(--ease, ease),
+             top .45s var(--ease, ease), left .45s var(--ease, ease);
+}
+#sgtour-root.show .sgtour-card{ opacity:1; transform:translateY(0); }
+#sgtour-root.centered .sgtour-card{
+  left:50% !important; top:50% !important;
+  transform:translate(-50%,-50%) !important;
+  max-width:320px; text-align:center; flex-direction:column; align-items:center;
+  padding:26px 22px 22px;
+}
+
+/* little pointer arrow toward the target (spotlight mode only) */
+.sgtour-arrow{
+  position:absolute; width:14px; height:14px;
+  background:var(--card, #fff); transform:rotate(45deg);
+  box-shadow:var(--shadow-sm, 0 4px 14px rgba(58,58,58,.07));
+  display:none;
+}
+#sgtour-root.spot .sgtour-arrow{ display:block; }
+.sgtour-card.below .sgtour-arrow{ top:-7px;  box-shadow:-3px -3px 6px rgba(58,58,58,.04); }
+.sgtour-card.above .sgtour-arrow{ bottom:-7px; box-shadow:3px 3px 6px rgba(58,58,58,.04); }
+
+/* Companion avatar */
+.sgtour-av{
+  flex-shrink:0;
+  width:46px; height:46px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; line-height:1;
+  background:rgba(123,175,142,.14);
+  border:1px solid rgba(123,175,142,.28);
+  animation:sgtourBob 3s ease-in-out infinite;
+}
+#sgtour-root.centered .sgtour-av{ width:62px; height:62px; font-size:34px; margin-bottom:4px; }
+
+.sgtour-body{ flex:1; min-width:0; }
+
+.sgtour-line{
+  font-size:15px; line-height:1.5; color:var(--text, #3A3A3A);
+  margin:2px 0 0;
+}
+#sgtour-root.centered .sgtour-title{
+  font-family:'Playfair Display', Georgia, serif;
+  font-size:22px; font-weight:600; color:var(--text, #3A3A3A);
+  line-height:1.25; margin-bottom:6px;
+}
+#sgtour-root.centered .sgtour-line{ font-size:15.5px; }
+
+.sgtour-dots{
+  display:flex; gap:7px; margin:14px 0 0; align-items:center;
+}
+#sgtour-root.centered .sgtour-dots{ justify-content:center; }
+.sgtour-dot{
+  width:6px; height:6px; border-radius:50%;
+  background:rgba(123,175,142,.28); transition:all .3s var(--ease, ease);
+}
+.sgtour-dot.on{ background:var(--primary, #7BAF8E); width:18px; border-radius:3px; }
+
+.sgtour-actions{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; margin-top:14px;
+}
+#sgtour-root.centered .sgtour-actions{ flex-direction:column-reverse; gap:10px; width:100%; }
+
+.sgtour-skip{
+  background:none; border:none; cursor:pointer;
+  font:inherit; font-size:13px; color:var(--text-light, #7A7A7A);
+  padding:6px 4px; border-radius:8px;
+}
+.sgtour-skip:hover{ color:var(--text, #3A3A3A); }
+
+.sgtour-next{
+  cursor:pointer; font:inherit; font-weight:700; font-size:14.5px;
+  color:#fff; border:none; letter-spacing:.01em;
+  padding:11px 20px; border-radius:12px;
+  background:linear-gradient(135deg, var(--primary, #7BAF8E) 0%, var(--primary-d, #5E9576) 100%);
+  box-shadow:0 6px 16px rgba(94,149,118,.28);
+  transition:transform .15s var(--ease, ease), box-shadow .2s ease;
+}
+.sgtour-next:hover{ transform:translateY(-1px); }
+.sgtour-next:active{ transform:scale(.98); }
+#sgtour-root.centered .sgtour-next{ width:100%; padding:13px; }
+
+/* focus visibility for keyboard users */
+.sgtour-next:focus-visible,
+.sgtour-skip:focus-visible{ outline:2px solid var(--primary-d, #5E9576); outline-offset:2px; }
+
+/* Replay button injected into Profile — relies on the app's own
+   .btn.secondary styling; this only adds spacing. */
+.sgtour-replay-btn{ margin-top:4px; }
+
+/* ---------- keyframes ---------- */
+@keyframes sgtourPulse{
+  0%{   box-shadow:0 0 0 0 rgba(123,175,142,.45); }
+  70%{  box-shadow:0 0 0 14px rgba(123,175,142,0); }
+  100%{ box-shadow:0 0 0 0 rgba(123,175,142,0); }
+}
+@keyframes sgtourBob{
+  0%,100%{ transform:translateY(0); }
+  50%{     transform:translateY(-3px); }
+}
+
+/* ---------- accessibility: reduced motion ---------- */
+@media (prefers-reduced-motion: reduce){
+  .sgtour-spot, .sgtour-card, .sgtour-backdrop, .sgtour-dot{ transition:none !important; }
+  .sgtour-spot::after, .sgtour-av{ animation:none !important; }
+}
