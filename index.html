@@ -166,6 +166,19 @@ h1,h2,h3,.serif { font-family: 'Playfair Display', serif; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
 
+/* Password field with show/hide toggle */
+.password-wrap { position: relative; }
+.password-wrap .form-input { padding-right: 48px; }
+.password-toggle {
+  position: absolute; top: 50%; right: 8px; transform: translateY(-50%);
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; cursor: pointer; padding: 0;
+  font-size: 18px; line-height: 1; color: var(--text-muted); border-radius: 50%;
+  transition: background 0.2s ease;
+}
+.password-toggle:hover { background: rgba(216,167,177,0.12); }
+.password-toggle:active { transform: translateY(-50%) scale(0.9); }
+
 .number-stepper {
   display: flex; align-items: center;
   background: var(--bg); border: 1.5px solid rgba(216,167,177,0.25);
@@ -232,6 +245,33 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
 .auth-success { background: #E8F5E9; color: #4CAF50; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
 .auth-success.show { display: block; }
 .auth-footer { text-align: center; font-size: 11px; color: var(--text-light); margin-top: 20px; line-height: 1.7; }
+
+/* ============================================================
+   WELCOME TOUR (first-time onboarding)
+============================================================ */
+#screen-welcome { padding-bottom: 0; }
+#screen-welcome.active { display: flex !important; flex-direction: column; opacity: 1; transform: none; }
+.welcome-inner {
+  flex: 1; display: flex; flex-direction: column;
+  min-height: 100vh; padding: 28px 26px calc(28px + env(safe-area-inset-bottom,0));
+}
+.welcome-skip {
+  align-self: flex-end; background: transparent; border: none; cursor: pointer;
+  font-size: 13px; color: var(--text-muted); padding: 6px 4px; font-family: 'DM Sans', sans-serif;
+}
+.welcome-track { flex: 1; display: flex; align-items: center; justify-content: center; }
+.welcome-slide { display: none; text-align: center; width: 100%; }
+.welcome-slide.active { display: block; animation: fadeSlideIn 0.4s ease; }
+.welcome-icon {
+  font-size: 76px; margin-bottom: 28px; display: inline-block;
+  animation: moonGlow 3s ease-in-out infinite alternate;
+}
+.welcome-title { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 14px; color: var(--text); }
+.welcome-text { font-size: 15px; color: var(--text-muted); line-height: 1.7; max-width: 320px; margin: 0 auto; }
+.welcome-dots { display: flex; gap: 8px; justify-content: center; margin: 32px 0 24px; }
+.welcome-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary-light); transition: all 0.3s ease; }
+.welcome-dot.active { background: var(--primary); width: 22px; border-radius: 4px; }
+.welcome-actions { display: flex; flex-direction: column; gap: 10px; }
 
 /* ============================================================
    LOADING OVERLAY
@@ -458,6 +498,44 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
     </div>
   </div>
 
+  <!-- ===== WELCOME TOUR ===== -->
+  <div id="screen-welcome" class="screen">
+    <div class="welcome-inner">
+      <button class="welcome-skip" onclick="finishWelcome()">Skip</button>
+      <div class="welcome-track">
+        <div class="welcome-slide active" id="wel-slide-0">
+          <span class="welcome-icon">🌙</span>
+          <h2 class="welcome-title serif">Welcome to Luna</h2>
+          <p class="welcome-text">Your gentle companion for understanding your cycle and connecting with your body — one day at a time.</p>
+        </div>
+        <div class="welcome-slide" id="wel-slide-1">
+          <span class="welcome-icon">📅</span>
+          <h2 class="welcome-title serif">Track &amp; Predict</h2>
+          <p class="welcome-text">Log your periods on the calendar and Luna predicts your next period, fertile window, and ovulation automatically.</p>
+        </div>
+        <div class="welcome-slide" id="wel-slide-2">
+          <span class="welcome-icon">💗</span>
+          <h2 class="welcome-title serif">Daily Check-ins</h2>
+          <p class="welcome-text">Record your symptoms, mood, water, and sleep each day to discover the patterns unique to you.</p>
+        </div>
+        <div class="welcome-slide" id="wel-slide-3">
+          <span class="welcome-icon">✨</span>
+          <h2 class="welcome-title serif">Insights &amp; Privacy</h2>
+          <p class="welcome-text">Get personalised wellness insights for every phase. Your data is encrypted, synced securely, and never sold.</p>
+        </div>
+      </div>
+      <div class="welcome-dots" id="welcome-dots">
+        <div class="welcome-dot active"></div>
+        <div class="welcome-dot"></div>
+        <div class="welcome-dot"></div>
+        <div class="welcome-dot"></div>
+      </div>
+      <div class="welcome-actions">
+        <button class="btn btn-primary btn-full" id="welcome-next-btn" onclick="welcomeNext()">Next →</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== AUTH SCREEN ===== -->
   <div id="screen-auth" class="screen">
     <div class="auth-inner">
@@ -481,7 +559,10 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
           </div>
           <div class="form-group">
             <label class="form-label">Password</label>
-            <input type="password" class="form-input" id="signin-password" placeholder="Your password" autocomplete="current-password">
+            <div class="password-wrap">
+              <input type="password" class="form-input" id="signin-password" placeholder="Your password" autocomplete="current-password">
+              <button type="button" class="password-toggle" aria-label="Show password" onclick="togglePassword('signin-password', this)">👁️</button>
+            </div>
           </div>
           <button class="btn btn-primary btn-full" id="signin-btn" onclick="signIn()">Sign In</button>
           <div class="auth-divider">or</div>
@@ -505,7 +586,10 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
           </div>
           <div class="form-group">
             <label class="form-label">Password</label>
-            <input type="password" class="form-input" id="signup-password" placeholder="Minimum 6 characters" autocomplete="new-password">
+            <div class="password-wrap">
+              <input type="password" class="form-input" id="signup-password" placeholder="Minimum 6 characters" autocomplete="new-password">
+              <button type="button" class="password-toggle" aria-label="Show password" onclick="togglePassword('signup-password', this)">👁️</button>
+            </div>
           </div>
           <button class="btn btn-primary btn-full" id="signup-btn" onclick="signUp()">Create Account</button>
           <div class="auth-divider">or</div>
@@ -940,6 +1024,40 @@ async function initAuth() {
 function showAuthScreen() {
   hideSplash();
   document.getElementById('bottom-nav').style.display = 'none';
+  // First-time visitors see the welcome tour before the auth screen.
+  if (!localStorage.getItem('luna_onboarded')) {
+    welcomeIndex = 0;
+    setWelcomeSlide(0);
+    navigate('welcome');
+  } else {
+    navigate('auth');
+  }
+}
+
+// ============================================================
+//  WELCOME TOUR
+// ============================================================
+let welcomeIndex = 0;
+const WELCOME_SLIDES = 4;
+
+function setWelcomeSlide(n) {
+  welcomeIndex = n;
+  document.querySelectorAll('.welcome-slide').forEach((s,i)=>s.classList.toggle('active', i===n));
+  document.querySelectorAll('#welcome-dots .welcome-dot').forEach((d,i)=>d.classList.toggle('active', i===n));
+  const btn = document.getElementById('welcome-next-btn');
+  btn.textContent = (n === WELCOME_SLIDES - 1) ? 'Get Started →' : 'Next →';
+}
+
+function welcomeNext() {
+  if (welcomeIndex < WELCOME_SLIDES - 1) {
+    setWelcomeSlide(welcomeIndex + 1);
+  } else {
+    finishWelcome();
+  }
+}
+
+function finishWelcome() {
+  try { localStorage.setItem('luna_onboarded', '1'); } catch(e) {}
   navigate('auth');
 }
 
@@ -1000,11 +1118,22 @@ async function signUp() {
 }
 
 async function signInWithGoogle() {
+  if (!sb) { showToast('⚙️ Supabase is not configured yet.'); return; }
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.href }
+    options: { redirectTo: window.location.origin + '/' }
   });
   if (error) showToast('Google sign-in failed: ' + error.message);
+}
+
+// Show / hide password fields
+function togglePassword(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁️';
+  btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
 }
 
 async function signOut() {
@@ -1268,7 +1397,7 @@ function navigate(screen) {
   const navEl = document.getElementById('nav-'+screen);
   if (navEl) navEl.classList.add('active');
 
-  const noNav = ['splash','auth'];
+  const noNav = ['splash','welcome','auth'];
   document.getElementById('bottom-nav').style.display = noNav.includes(screen) ? 'none' : 'flex';
 
   if (screen==='home')     loadHome();
@@ -1287,8 +1416,7 @@ function beginJourney() {
     return;
   }
   if (!currentUser) {
-    hideSplash();
-    navigate('auth');
+    showAuthScreen();
   } else {
     checkOnboarding();
   }
