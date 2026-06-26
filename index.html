@@ -374,8 +374,8 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
 .cal-day:active { transform: scale(0.88); }
 .cal-day.empty  { cursor: default; }
 .cal-day.today  { box-shadow: 0 0 0 2px var(--text); font-weight: 700; }
-.cal-day.period { background: var(--primary); color: white; }
-.cal-day.fertile { background: var(--primary-light); color: var(--primary-dark); }
+.cal-day.period { background: #E0484D; color: white; }
+.cal-day.fertile { background: #DCEFE1; color: #2E8B57; }
 .cal-day.ovulation { background: var(--accent); color: white; }
 .cal-day.predicted-period { background: rgba(216,167,177,0.25); color: var(--primary-dark); border: 1px dashed var(--primary); }
 .cal-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
@@ -657,10 +657,10 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
         </div>
         <div class="cal-grid" id="cal-grid"></div>
         <div class="cal-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:var(--primary);"></div><span>Period</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#E0484D;"></div><span>Period</span></div>
           <div class="legend-item"><div class="legend-dot" style="background:var(--primary-light);border:1px dashed var(--primary);"></div><span>Predicted</span></div>
           <div class="legend-item"><div class="legend-dot" style="background:var(--accent);"></div><span>Ovulation</span></div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--primary-light);"></div><span>Fertile</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#DCEFE1;border:1px solid #2E8B57;"></div><span>Fertile</span></div>
           <div class="legend-item"><div class="legend-dot" style="background:transparent;box-shadow:0 0 0 2px var(--text);"></div><span>Today</span></div>
         </div>
       </div>
