@@ -1105,8 +1105,15 @@ async function signUp() {
     await sb.from('profiles').upsert({ id: data.user.id, name, cycle_length: 28, period_length: 5 });
   }
 
-  document.getElementById('signup-success').textContent = '✓ Account created! Check your email to confirm, then sign in.';
-  document.getElementById('signup-success').classList.add('show');
+  if (data.session) {
+    // Email confirmation is disabled — the user is signed in immediately.
+    // onAuthStateChange will load their data and move them into the app.
+    showToast('Welcome to Luna! 🌙');
+  } else {
+    // Fallback: confirmation still required on the project.
+    document.getElementById('signup-success').textContent = '✓ Account created! You can sign in now.';
+    document.getElementById('signup-success').classList.add('show');
+  }
 }
 
 async function signInWithGoogle() {
