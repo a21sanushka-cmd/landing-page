@@ -8,7 +8,7 @@
 <title>Luna — Understand your cycle.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=Dancing+Script:wght@500;600;700&display=swap" rel="stylesheet">
 <!-- Supabase JS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -251,6 +251,47 @@
   display: flex; align-items: center; justify-content: center;
 }
 .talks-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+/* ============================================================
+   A LETTER FROM LUNA (Phase 7)
+============================================================ */
+#letter-overlay {
+  position: fixed; inset: 0; z-index: 420; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 32px; text-align: center;
+  background: var(--phase-appbg, var(--bg)); opacity: 0; pointer-events: none; transition: opacity 0.6s ease;
+}
+#letter-overlay.visible { opacity: 1; pointer-events: all; }
+.letter-env-wrap { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.letter-env { width: 248px; height: 168px; position: relative; cursor: pointer; perspective: 700px; animation: ptFloat 5s ease-in-out infinite; }
+.env-body {
+  position: absolute; inset: 0; border-radius: 16px;
+  background: linear-gradient(160deg, #FFFDFB, var(--phase-accent-soft, #F2D9DF));
+  box-shadow: 0 22px 48px var(--phase-glow, rgba(216,167,177,0.4)), inset 0 1px 0 rgba(255,255,255,0.8);
+}
+.env-flap {
+  position: absolute; top: 0; left: 0; right: 0; height: 64%;
+  background: linear-gradient(160deg, var(--phase-accent-soft, #F2D9DF), #FFFDFB);
+  clip-path: polygon(0 0, 100% 0, 50% 100%); border-radius: 16px 16px 0 0;
+  transform-origin: top center; transition: transform 0.55s ease, opacity 0.55s ease; z-index: 3;
+}
+.letter-env.open .env-flap { transform: rotateX(165deg); opacity: 0.35; }
+.env-seal {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 48px; height: 48px; border-radius: 50%; background: var(--phase-accent, var(--primary)); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 22px; z-index: 4;
+  box-shadow: 0 6px 16px var(--phase-glow, rgba(216,167,177,0.5)), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+.letter-caption { font-family: 'Playfair Display', serif; font-style: italic; font-size: 16px; color: var(--text); }
+.letter-hint { font-size: 12px; color: var(--text-muted); letter-spacing: 0.5px; margin-top: -8px; }
+.letter-paper {
+  display: none; max-width: 360px; width: 100%;
+  background: linear-gradient(180deg, #FFFEFC, #FBF5EE);
+  border-radius: 22px; padding: 30px 26px; box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(255,255,255,0.7); text-align: left;
+}
+.letter-paper.show { display: block; animation: fadeSlideIn 0.55s ease; }
+.letter-text { font-family: 'Dancing Script', cursive; font-size: 22px; line-height: 1.65; color: #5e4a50; white-space: pre-line; }
+.letter-close { margin-top: 22px; }
 
 *, *::before, *::after {
   box-sizing: border-box; margin: 0; padding: 0;
@@ -1136,6 +1177,23 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
   </nav>
 </div><!-- end #app -->
 
+<!-- ===== A LETTER FROM LUNA ===== -->
+<div id="letter-overlay" data-phase="follicular">
+  <div class="letter-env-wrap">
+    <div class="letter-env" onclick="openLetterEnvelope()">
+      <div class="env-body"></div>
+      <div class="env-flap"></div>
+      <div class="env-seal">💌</div>
+    </div>
+    <div class="letter-caption">A letter from Luna 🌙</div>
+    <div class="letter-hint">tap to open</div>
+  </div>
+  <div class="letter-paper" id="letter-paper">
+    <div class="letter-text" id="letter-text"></div>
+    <button class="btn btn-primary btn-full letter-close" onclick="closeLetter()">Keep it close 🤍</button>
+  </div>
+</div>
+
 <!-- ===== PHASE TRANSITION ===== -->
 <div id="phase-transition" data-phase="follicular">
   <div id="pt-emoji">🌙</div>
@@ -1969,6 +2027,62 @@ function renderTalksInput(){
 }
 
 // ============================================================
+//  A LETTER FROM LUNA (Phase 7)
+// ============================================================
+const LUNA_LETTERS = [
+  n => `Dear ${n},\n\nI just wanted to remind you how proud I am of you. Even on the days that felt heavy, you kept going — and that matters more than you know.\n\nBe gentle with yourself this week. You're allowed to rest, to feel, to simply be.\n\nAlways in your corner,\nLuna 🌙`,
+  n => `Dear ${n},\n\nSome weeks bloom and some weeks rest — and both are beautiful, just like you. Whatever this one holds, I'll be right here: noticing, cheering, holding space.\n\nYou are doing so much better than you think.\n\nWith all my love,\nLuna 🌙`,
+  n => `Dear ${n},\n\nIf no one has told you today: you are deeply, quietly doing your best, and it is enough. Your body is wise. Your heart is brave. Your softness is a strength.\n\nLean into this week gently.\n\nForever yours,\nLuna 🌙`,
+  n => `Dear ${n},\n\nThank you for showing up for yourself — for checking in, for listening to your body, for being here at all. That's love, and you deserve it right back.\n\nHere's to a kinder week ahead. I've got you.\n\nWith warmth,\nLuna 🌙`,
+  n => `Dear ${n},\n\nYou don't have to earn rest. You don't have to be 'on' all the time. This week, let yourself move at the pace your body asks for — I'll be cheering either way.\n\nSo glad I get to grow alongside you.\n\nLove always,\nLuna 🌙`
+];
+
+function lunaWeekKey(){
+  const d = new Date();
+  const onejan = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+  return d.getFullYear() + '-W' + week;
+}
+function _hashStr(s){ let h=0; for (let i=0;i<s.length;i++){ h=(h*31 + s.charCodeAt(i))|0; } return Math.abs(h); }
+
+let letterShownThisSession = false;
+function maybeShowLetter(){
+  if (letterShownThisSession) return;
+  let seen = null; try { seen = localStorage.getItem('luna_letter_week'); } catch(e) {}
+  const wk = lunaWeekKey();
+  if (seen === wk) return;                 // already received this week's letter
+  const p = lunaProfileGet();
+  const day = (p.letterDay != null) ? p.letterDay : 0;  // default: Sunday onward
+  if (new Date().getDay() < day) return;   // not yet the chosen day — letter still on its way
+  letterShownThisSession = true;
+  showLetter();
+}
+
+function showLetter(){
+  const ov = document.getElementById('letter-overlay'); if (!ov) return;
+  ov.setAttribute('data-phase', lunaCurrentTheme || 'follicular');
+  const idx = _hashStr(lunaWeekKey()) % LUNA_LETTERS.length;
+  document.getElementById('letter-text').textContent = LUNA_LETTERS[idx](lunaName());
+  document.querySelector('.letter-env').classList.remove('open');
+  document.getElementById('letter-paper').classList.remove('show');
+  document.querySelector('.letter-env-wrap').style.display = 'flex';
+  ov.classList.add('visible');
+}
+
+function openLetterEnvelope(){
+  document.querySelector('.letter-env').classList.add('open');
+  setTimeout(() => {
+    document.querySelector('.letter-env-wrap').style.display = 'none';
+    document.getElementById('letter-paper').classList.add('show');
+  }, 520);
+}
+
+function closeLetter(){
+  document.getElementById('letter-overlay').classList.remove('visible');
+  try { localStorage.setItem('luna_letter_week', lunaWeekKey()); } catch(e) {}
+}
+
+// ============================================================
 //  CONVERSATIONAL ONBOARDING (Phase 3)
 // ============================================================
 const OB_FLOW = [
@@ -2260,6 +2374,7 @@ function checkOnboarding() {
   } else {
     document.getElementById('bottom-nav').style.display = 'flex';
     navigate('home');
+    setTimeout(maybeShowLetter, 1400);
   }
 }
 
