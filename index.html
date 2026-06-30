@@ -113,6 +113,51 @@
   .amb-floater, .amb-twinkle, .amb-rain, #pt-emoji { animation:none !important; }
 }
 
+/* ============================================================
+   CONVERSATIONAL ONBOARDING (Phase 3)
+============================================================ */
+#screen-luna-onboard { padding-bottom:0; }
+#screen-luna-onboard.active { display:flex !important; flex-direction:column; opacity:1; transform:none; }
+.luna-chat { flex:1; overflow-y:auto; padding:36px 20px 12px; display:flex; flex-direction:column; gap:13px; }
+.luna-msg { display:flex; align-items:flex-end; gap:8px; max-width:88%; animation:fadeSlideIn 0.4s ease; }
+.luna-avatar {
+  width:34px; height:34px; border-radius:50%; flex:0 0 auto;
+  display:flex; align-items:center; justify-content:center; font-size:18px;
+  background:linear-gradient(135deg, var(--phase-accent-soft,#F2D9DF), #fff); box-shadow:var(--shadow-sm);
+}
+.luna-bubble {
+  background:var(--bg-card); border:1px solid rgba(255,255,255,0.6); box-shadow:var(--shadow-sm);
+  padding:12px 16px; border-radius:20px 20px 20px 6px; font-size:14.5px; line-height:1.55; color:var(--text);
+}
+.luna-msg.user { align-self:flex-end; flex-direction:row-reverse; }
+.luna-msg.user .luna-bubble { background:var(--phase-accent,#D8A7B1); color:#fff; border:none; border-radius:20px 20px 6px 20px; }
+.luna-typing { display:flex; gap:5px; align-items:center; }
+.luna-typing span { width:7px; height:7px; border-radius:50%; background:var(--phase-accent,#C0899A); opacity:0.5; animation:typingDot 1.2s infinite ease-in-out; }
+.luna-typing span:nth-child(2){ animation-delay:0.18s; }
+.luna-typing span:nth-child(3){ animation-delay:0.36s; }
+@keyframes typingDot { 0%,60%,100%{ transform:translateY(0); opacity:0.4; } 30%{ transform:translateY(-5px); opacity:1; } }
+.luna-input-area {
+  padding:14px 18px calc(20px + env(safe-area-inset-bottom,0));
+  border-top:1px solid rgba(216,167,177,0.15);
+  background:rgba(255,252,249,0.82); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+}
+.luna-input-row { display:flex; gap:10px; align-items:center; }
+.luna-input-row .form-input { flex:1; }
+.luna-send {
+  flex:0 0 auto; width:48px; height:48px; border-radius:50%; border:none; cursor:pointer;
+  font-size:20px; color:#fff; background:var(--phase-accent,#D8A7B1); box-shadow:var(--shadow-sm); transition:transform 0.15s ease;
+}
+.luna-send:active { transform:scale(0.9); }
+.luna-chips { display:flex; flex-wrap:wrap; gap:10px; }
+.luna-chip {
+  padding:12px 18px; border-radius:var(--radius-pill); background:var(--bg-card);
+  border:1.5px solid rgba(216,167,177,0.3); font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600;
+  color:var(--text); cursor:pointer; box-shadow:var(--shadow-sm); transition:transform 0.15s ease;
+}
+.luna-chip:active { transform:scale(0.95); }
+.luna-chip span { margin-right:6px; }
+.luna-stepper-row { display:flex; flex-direction:column; gap:12px; }
+
 *, *::before, *::after {
   box-sizing: border-box; margin: 0; padding: 0;
   -webkit-tap-highlight-color: transparent;
@@ -912,6 +957,12 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
     </div>
   </div>
 
+  <!-- ===== CONVERSATIONAL ONBOARDING ===== -->
+  <div id="screen-luna-onboard" class="screen">
+    <div class="luna-chat" id="luna-chat"></div>
+    <div class="luna-input-area" id="luna-input-area"></div>
+  </div>
+
   <!-- ===== PHASES SCREEN ===== -->
   <div id="screen-phases" class="screen">
     <div class="screen-inner phases-inner">
@@ -1665,6 +1716,161 @@ function syncPhaseTheme() {
   try { localStorage.setItem('luna_last_phase', phase); } catch(e) {}
 }
 
+// ============================================================
+//  LUNA VOICE LAYER (Phase 4 scaffold)
+//  Rule-based today. Same signature can later call an LLM
+//  (e.g. via a Supabase Edge Function) without changing callers.
+// ============================================================
+function lunaProfileGet(){ try { return JSON.parse(localStorage.getItem('luna_profile')||'{}'); } catch(e){ return {}; } }
+function lunaProfileSet(obj){ try { localStorage.setItem('luna_profile', JSON.stringify({ ...lunaProfileGet(), ...obj })); } catch(e){} }
+function lunaName(){ return lunaProfileGet().nickname || (userProfile && userProfile.name) || 'love'; }
+const _lpick = a => a[Math.floor(Math.random()*a.length)];
+
+function lunaSays(intent, data={}) {
+  const n = data.name || lunaName();
+  switch (intent) {
+    case 'low_sleep': return _lpick([`${n}, only ${data.hours||'a few'} hours? 😭 Let's get you to bed earlier tonight.`, `That's not a lot of sleep, ${n}. Be gentle with yourself today, okay?`]);
+    case 'low_water': return _lpick([`Sip sip, ${n} 💧 Your body would love a little more water today.`, `Let's get some water in, ${n} — even one glass counts.`]);
+    case 'high_pain': return _lpick([`I'm sorry you're hurting, ${n}. Heat, rest, something cosy — promise me? 🤍`, `Ouch. Be so tender with yourself today, ${n}.`]);
+    case 'streak':    return _lpick([`${data.days||'Several'} days in a row — I'm so proud of you, ${n}! ✨`, `Look at you showing up, ${n}. That's everything. 💕`]);
+    case 'celebrate': return _lpick([`Yes, ${n}! 🌸`, `Love this for you, ${n}. ✨`]);
+    default:          return `I'm right here with you, ${n}. 🌙`;
+  }
+}
+
+// ============================================================
+//  CONVERSATIONAL ONBOARDING (Phase 3)
+// ============================================================
+const OB_FLOW = [
+  { luna:["Hi! I'm Luna. 🌙","I'm so happy you're finally here.","Before we begin… what should I call you?"],
+    input:{ type:'text', key:'nickname', placeholder:'Your name or a nickname' } },
+  { luna:d=>[`Lovely to meet you, ${d.nickname}. 💕`,"Quick one — are you more of a morning person, or a night owl?"],
+    input:{ type:'chips', key:'chronotype', options:[['🌅','Morning person','morning'],['🌙','Night owl','night']] } },
+  { luna:["When did your last period start? It helps me find where you are today."],
+    input:{ type:'date', key:'lastStart' } },
+  { luna:["Thank you, love. How long is your cycle, usually?"],
+    input:{ type:'stepper', key:'cycleLen', min:21, max:45, def:28, suffix:'days' } },
+  { luna:["And how many days does your period usually last?"],
+    input:{ type:'stepper', key:'periodLen', min:1, max:10, def:5, suffix:'days' } },
+  { luna:["One last thing — which vibe feels most like you?"],
+    input:{ type:'chips', key:'vibe', options:[['🌸','Soft & dreamy','soft'],['✨','Bright & playful','bright'],['🌙','Calm & cosy','calm']] } },
+  { luna:d=>[`That's everything, ${d.nickname}. 🌙`,"I'll be right here with you — every single day. Let's step into your world."],
+    input:{ type:'finish', label:'Enter my world 🌙' } }
+];
+
+const obState = { i:0, data:{} };
+
+function startLunaOnboarding(){
+  obState.i = 0; obState.data = {};
+  document.getElementById('luna-chat').innerHTML = '';
+  document.getElementById('luna-input-area').innerHTML = '';
+  document.getElementById('bottom-nav').style.display = 'none';
+  hideSplash();
+  navigate('luna-onboard');
+  runObFlowStep();
+}
+
+function lunaChatBubble(text, who='luna'){
+  const chat = document.getElementById('luna-chat');
+  const msg = document.createElement('div'); msg.className = 'luna-msg ' + (who==='user'?'user':'');
+  if (who==='luna'){ const av=document.createElement('div'); av.className='luna-avatar'; av.textContent='🌙'; msg.appendChild(av); }
+  const b = document.createElement('div'); b.className='luna-bubble'; b.textContent = text; msg.appendChild(b);
+  chat.appendChild(msg); chat.scrollTop = chat.scrollHeight;
+}
+
+function lunaTyping(show){
+  const chat = document.getElementById('luna-chat');
+  let t = document.getElementById('luna-typing-ind');
+  if (show){
+    if (t) return;
+    const m = document.createElement('div'); m.className='luna-msg'; m.id='luna-typing-ind';
+    m.innerHTML = '<div class="luna-avatar">🌙</div><div class="luna-bubble luna-typing"><span></span><span></span><span></span></div>';
+    chat.appendChild(m); chat.scrollTop = chat.scrollHeight;
+  } else if (t){ t.remove(); }
+}
+
+async function runObFlowStep(){
+  const step = OB_FLOW[obState.i];
+  const lines = typeof step.luna === 'function' ? step.luna(obState.data) : step.luna;
+  document.getElementById('luna-input-area').innerHTML = '';
+  for (const line of lines){
+    lunaTyping(true);
+    await new Promise(r => setTimeout(r, REDUCE_MOTION ? 120 : 720));
+    lunaTyping(false);
+    lunaChatBubble(line, 'luna');
+    await new Promise(r => setTimeout(r, REDUCE_MOTION ? 60 : 260));
+  }
+  renderObInput(step.input);
+}
+
+function obAdvance(key, value, label){
+  if (key) obState.data[key] = value;
+  if (label !== undefined) lunaChatBubble(label, 'user');
+  obState.i++;
+  if (obState.i < OB_FLOW.length) runObFlowStep();
+}
+
+function renderObInput(input){
+  const area = document.getElementById('luna-input-area');
+  area.innerHTML = '';
+  if (input.type === 'text'){
+    const row = document.createElement('div'); row.className='luna-input-row';
+    row.innerHTML = `<input class="form-input" id="ob-text" placeholder="${input.placeholder||''}" autocomplete="off"><button class="luna-send" id="ob-send">→</button>`;
+    area.appendChild(row);
+    const send = () => { const v = document.getElementById('ob-text').value.trim(); if (!v) return; obAdvance(input.key, v, v); };
+    document.getElementById('ob-send').onclick = send;
+    document.getElementById('ob-text').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+    setTimeout(() => { const el=document.getElementById('ob-text'); if(el) el.focus(); }, 120);
+  } else if (input.type === 'chips'){
+    const wrap = document.createElement('div'); wrap.className='luna-chips';
+    input.options.forEach(([emoji,label,val]) => {
+      const c = document.createElement('button'); c.className='luna-chip'; c.innerHTML = `<span>${emoji}</span>${label}`;
+      c.onclick = () => obAdvance(input.key, val, label);
+      wrap.appendChild(c);
+    });
+    area.appendChild(wrap);
+  } else if (input.type === 'date'){
+    const row = document.createElement('div'); row.className='luna-input-row';
+    row.innerHTML = `<input type="date" class="form-input" id="ob-date"><button class="luna-send" id="ob-send">→</button>`;
+    area.appendChild(row);
+    const d = document.getElementById('ob-date'); d.value = todayStr(); d.max = todayStr();
+    document.getElementById('ob-send').onclick = () => {
+      if (!d.value){ showToast('Pick a date 📅'); return; }
+      obAdvance(input.key, d.value, parseDate(d.value).toLocaleDateString('en-US',{month:'long',day:'numeric'}));
+    };
+  } else if (input.type === 'stepper'){
+    const wrap = document.createElement('div'); wrap.className='luna-stepper-row';
+    wrap.innerHTML = `<div class="number-stepper"><button class="stepper-btn" id="ob-minus">−</button><span class="stepper-value" id="ob-val">${input.def}</span><button class="stepper-btn" id="ob-plus">+</button></div><button class="btn btn-primary btn-full" id="ob-cont">Continue →</button>`;
+    area.appendChild(wrap);
+    const val = document.getElementById('ob-val');
+    document.getElementById('ob-minus').onclick = () => { val.textContent = Math.max(input.min, parseInt(val.textContent)-1); };
+    document.getElementById('ob-plus').onclick  = () => { val.textContent = Math.min(input.max, parseInt(val.textContent)+1); };
+    document.getElementById('ob-cont').onclick  = () => obAdvance(input.key, parseInt(val.textContent), val.textContent+' '+(input.suffix||''));
+  } else if (input.type === 'finish'){
+    const b = document.createElement('button'); b.className='btn btn-primary btn-full'; b.textContent = input.label || 'Begin';
+    b.onclick = finishLunaOnboarding;
+    area.appendChild(b);
+  }
+}
+
+async function finishLunaOnboarding(){
+  const d = obState.data;
+  showLoading('Setting up your world…');
+  lunaProfileSet({ nickname:d.nickname, chronotype:d.chronotype, vibe:d.vibe });
+  const cycleLen = d.cycleLen || 28, periodLen = d.periodLen || 5;
+  if (!userProfile) userProfile = {};
+  userProfile.name = d.nickname; userProfile.cycle_length = cycleLen; userProfile.period_length = periodLen;
+  try { await pushProfile({ name:d.nickname, cycle_length:cycleLen, period_length:periodLen }); } catch(e){}
+  if (d.lastStart){
+    const endDate = fmt(addDays(parseDate(d.lastStart), periodLen-1));
+    try { await insertCycle(d.lastStart, endDate); } catch(e){}
+  }
+  hideLoading();
+  document.getElementById('bottom-nav').style.display = 'flex';
+  navigate('home');
+  setTimeout(() => showToast(`Welcome to Luna, ${d.nickname}! 🌙`), 450);
+}
+
 function loadPhases() {
   let p = 'menstrual';
   try { const cp = calculateCurrentPhase(); if (cp && PHASE_GUIDE[cp]) p = cp; } catch(e) {}
@@ -1787,7 +1993,7 @@ function navigate(screen) {
   const navEl = document.getElementById('nav-'+screen);
   if (navEl) navEl.classList.add('active');
 
-  const noNav = ['splash','welcome','auth'];
+  const noNav = ['splash','welcome','auth','luna-onboard'];
   document.getElementById('bottom-nav').style.display = noNav.includes(screen) ? 'none' : 'flex';
 
   if (screen==='home')     loadHome();
@@ -1814,17 +2020,12 @@ function beginJourney() {
 }
 
 function checkOnboarding() {
-  document.getElementById('bottom-nav').style.display = 'flex';
   hideSplash();
   if (!userCycles.length) {
-    navigate('home');
-    setTimeout(() => {
-      document.getElementById('ob-start-date').value = todayStr();
-      document.getElementById('ob-start-date').max   = todayStr();
-      showModal('onboarding-modal');
-      setObStep(1);
-    }, 400);
+    // Luna 2.0 — warm conversational onboarding instead of a form
+    startLunaOnboarding();
   } else {
+    document.getElementById('bottom-nav').style.display = 'flex';
     navigate('home');
   }
 }
