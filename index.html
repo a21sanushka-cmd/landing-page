@@ -383,6 +383,70 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
 .legend-dot  { width: 10px; height: 10px; border-radius: 50%; }
 
 /* ============================================================
+   CYCLE PHASES SCREEN
+============================================================ */
+.phases-inner { position: relative; overflow: hidden; }
+
+/* floating decorative flowers & hearts */
+.phase-decor { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.float-deco { position: absolute; font-size: 22px; opacity: 0.32; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.08)); animation: decoFloat 9s ease-in-out infinite; }
+.float-deco.d1 { top: 5%;  left: 7%;   font-size: 26px; animation-delay: 0s;   }
+.float-deco.d2 { top: 13%; right: 9%;  font-size: 20px; animation-delay: 1.4s; }
+.float-deco.d3 { top: 33%; left: 4%;   font-size: 18px; animation-delay: 2.6s; }
+.float-deco.d4 { top: 50%; right: 6%;  font-size: 22px; animation-delay: 0.8s; }
+.float-deco.d5 { top: 68%; left: 8%;   font-size: 18px; animation-delay: 3.2s; }
+.float-deco.d6 { top: 82%; right: 11%; font-size: 24px; animation-delay: 2.0s; }
+@keyframes decoFloat {
+  0%,100% { transform: translateY(0) rotate(-6deg); opacity: 0.28; }
+  50%     { transform: translateY(-14px) rotate(8deg); opacity: 0.50; }
+}
+
+/* hero with 3D bloom */
+.phases-hero { position: relative; z-index: 1; text-align: center; padding: 6px 0 8px; }
+.flower-3d { width: 106px; height: 106px; margin: 0 auto 4px; filter: drop-shadow(0 12px 18px rgba(216,167,177,0.45)); animation: bloomFloat 6s ease-in-out infinite; }
+.flower-3d svg { width: 100%; height: 100%; display: block; }
+.flower-petals { transform-origin: 60px 60px; animation: bloomSpin 26s linear infinite; }
+@keyframes bloomFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+@keyframes bloomSpin  { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.phases-title { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
+.phases-sub { font-family: 'Playfair Display', serif; font-style: italic; font-size: 14px; color: var(--text-muted); }
+
+/* phase selector pills */
+.phase-pills { position: relative; z-index: 1; display: flex; gap: 8px; overflow-x: auto; padding: 14px 2px 16px; scrollbar-width: none; }
+.phase-pills::-webkit-scrollbar { display: none; }
+.phase-pill {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  padding: 9px 16px; border-radius: var(--radius-pill);
+  background: var(--bg-card); border: 1.5px solid rgba(216,167,177,0.22);
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; color: var(--text-muted);
+  cursor: pointer; box-shadow: var(--shadow-sm); transition: all 0.2s ease; flex: 0 0 auto;
+}
+.phase-pill span { font-size: 15px; }
+.phase-pill:active { transform: scale(0.95); }
+.phase-pill.active { background: var(--pc-soft); border-color: var(--pc); color: var(--pc); }
+
+/* themed phase card */
+.phase-card { position: relative; z-index: 1; background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow-lg); overflow: hidden; border: 1px solid rgba(216,167,177,0.15); animation: fadeSlideIn 0.35s ease; }
+.phase-card-head { display: flex; align-items: center; gap: 16px; padding: 24px 22px; background: linear-gradient(135deg, var(--pc-soft) 0%, var(--bg-card) 100%); }
+.phase-card-emoji { font-size: 46px; line-height: 1; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.12)); }
+.phase-card-headtext h2 { font-size: 26px; font-weight: 700; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.phase-card-days { font-size: 12px; font-weight: 600; color: var(--pc); text-transform: uppercase; letter-spacing: 1px; }
+.phase-now-tag { font-family: 'DM Sans', sans-serif; font-style: normal; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: #fff; background: var(--pc); padding: 3px 9px; border-radius: var(--radius-pill); }
+.phase-essence { font-family: 'Playfair Display', serif; font-style: italic; font-size: 15px; line-height: 1.6; color: var(--text); padding: 18px 22px 4px; }
+.phase-aspects { padding: 6px 14px 18px; }
+.aspect { display: flex; gap: 14px; align-items: flex-start; padding: 12px 8px; border-bottom: 1px solid rgba(216,167,177,0.10); }
+.aspect:last-child { border-bottom: none; }
+.aspect-icon { flex: 0 0 auto; width: 42px; height: 42px; border-radius: 14px; background: var(--pc-soft); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.aspect-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--pc); margin-bottom: 3px; }
+.aspect-text { font-size: 13.5px; line-height: 1.6; color: var(--text); }
+
+/* per-phase colour themes */
+.phase-theme-menstrual  { --pc:#E0484D; --pc-soft:#FCE7E9; }
+.phase-theme-follicular { --pc:#4F9D69; --pc-soft:#E4F3EA; }
+.phase-theme-ovulation  { --pc:#B5862E; --pc-soft:#F6ECD6; }
+.phase-theme-luteal     { --pc:#8E74C0; --pc-soft:#ECE5F6; }
+
+/* ============================================================
    TRACKER SCREEN
 ============================================================ */
 .tracker-section-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
@@ -773,12 +837,67 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
     </div>
   </div>
 
+  <!-- ===== PHASES SCREEN ===== -->
+  <div id="screen-phases" class="screen">
+    <div class="screen-inner phases-inner">
+      <div class="phase-decor" aria-hidden="true">
+        <span class="float-deco d1">🌸</span>
+        <span class="float-deco d2">🌷</span>
+        <span class="float-deco d3">💗</span>
+        <span class="float-deco d4">🌼</span>
+        <span class="float-deco d5">🤍</span>
+        <span class="float-deco d6">🌸</span>
+      </div>
+
+      <div class="phases-hero">
+        <div class="flower-3d">
+          <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="petalGrad" cx="50%" cy="35%" r="65%">
+                <stop offset="0%" stop-color="#FFF3F6"/>
+                <stop offset="55%" stop-color="#F2C7D4"/>
+                <stop offset="100%" stop-color="#D8A7B1"/>
+              </radialGradient>
+              <radialGradient id="coreGrad" cx="50%" cy="40%" r="60%">
+                <stop offset="0%" stop-color="#F7E6BE"/>
+                <stop offset="100%" stop-color="#C8A96B"/>
+              </radialGradient>
+            </defs>
+            <g class="flower-petals">
+              <g>
+                <ellipse cx="60" cy="28" rx="15" ry="26" fill="url(#petalGrad)"/>
+                <ellipse cx="60" cy="28" rx="15" ry="26" fill="url(#petalGrad)" transform="rotate(60 60 60)"/>
+                <ellipse cx="60" cy="28" rx="15" ry="26" fill="url(#petalGrad)" transform="rotate(120 60 60)"/>
+                <ellipse cx="60" cy="28" rx="15" ry="26" fill="url(#petalGrad)" transform="rotate(180 60 60)"/>
+                <ellipse cx="60" cy="28" rx="15" ry="26" fill="url(#petalGrad)" transform="rotate(240 60 60)"/>
+                <ellipse cx="60" cy="28" rx="15" ry="26" fill="url(#petalGrad)" transform="rotate(300 60 60)"/>
+              </g>
+              <circle cx="60" cy="60" r="15" fill="url(#coreGrad)"/>
+            </g>
+          </svg>
+        </div>
+        <h1 class="serif phases-title">Your Cycle Phases</h1>
+        <p class="phases-sub">Move with your body's rhythm — not against it.</p>
+      </div>
+
+      <div class="phase-pills" id="phase-pills">
+        <button class="phase-pill phase-theme-menstrual"  data-phase="menstrual"  onclick="selectPhase('menstrual')"><span>🌙</span> Menstrual</button>
+        <button class="phase-pill phase-theme-follicular" data-phase="follicular" onclick="selectPhase('follicular')"><span>🌱</span> Follicular</button>
+        <button class="phase-pill phase-theme-ovulation"  data-phase="ovulation"  onclick="selectPhase('ovulation')"><span>🌸</span> Ovulation</button>
+        <button class="phase-pill phase-theme-luteal"     data-phase="luteal"     onclick="selectPhase('luteal')"><span>🌷</span> Luteal</button>
+      </div>
+
+      <div id="phase-detail"></div>
+    </div>
+  </div>
+
   <!-- ===== BOTTOM NAV ===== -->
   <nav id="bottom-nav" style="display:none;">
     <div class="nav-item active" onclick="navigate('home')"     id="nav-home">     <span class="nav-icon">🏠</span><span class="nav-label">Home</span></div>
     <div class="nav-item"        onclick="navigate('calendar')" id="nav-calendar"> <span class="nav-icon">📅</span><span class="nav-label">Calendar</span></div>
     <div class="nav-item"        onclick="navigate('tracker')"  id="nav-tracker">  <span class="nav-icon">💊</span><span class="nav-label">Track</span></div>
     <div class="nav-item"        onclick="navigate('insights')" id="nav-insights"> <span class="nav-icon">📊</span><span class="nav-label">Insights</span></div>
+    <div class="nav-item"        onclick="navigate('phases')"   id="nav-phases">   <span class="nav-icon">🌸</span><span class="nav-label">Phases</span></div>
     <div class="nav-item"        onclick="navigate('profile')"  id="nav-profile">  <span class="nav-icon">👤</span><span class="nav-label">Profile</span></div>
   </nav>
 </div><!-- end #app -->
@@ -1312,6 +1431,94 @@ function calculateCurrentPhase() {
   return 'luteal';
 }
 
+// ============================================================
+//  CYCLE PHASES — educational guide
+// ============================================================
+const PHASE_GUIDE = {
+  menstrual: {
+    emoji:'🌙', name:'Menstrual', days:'Days 1–5',
+    essence:'Rest is productive. Turn inward, slow down, and let your body restore.',
+    energy:'Low and tender. Your body is shedding and resetting — honour the need to slow down and recharge.',
+    mood:'Reflective and intuitive. A beautiful time to journal, dream, and gently check in with yourself.',
+    workouts:'Soft movement feels best — restorative yoga, light stretching, and slow walks in the fresh air.',
+    nutrition:'Warm, iron-rich foods: leafy greens, lentils, beets and soups. Add magnesium and stay cosy and hydrated.',
+    productivity:'Reflect and plan rather than push. Review your month, set soft intentions, and rest without guilt.'
+  },
+  follicular: {
+    emoji:'🌱', name:'Follicular', days:'Days 6–13',
+    essence:'Fresh energy is rising. Plant your seeds and begin again.',
+    energy:'Climbing and bright as oestrogen rises — you feel renewed, light, and capable.',
+    mood:'Optimistic, curious and creative. Ideas flow easily and the world feels open.',
+    workouts:'Build intensity — strength training, cardio, dance, or finally trying that new class.',
+    nutrition:'Light and fresh: colourful veggies, lean protein, fermented foods, and flax or pumpkin seeds.',
+    productivity:'Brainstorm, start new projects, and take on the things that felt too hard last week.'
+  },
+  ovulation: {
+    emoji:'🌸', name:'Ovulation', days:'Days 14–16',
+    essence:'You are in full bloom. Let yourself shine and connect.',
+    energy:'Peak vitality — you feel your most radiant, confident, and magnetic.',
+    mood:'Warm, social and expressive. Your words land beautifully and connection feels effortless.',
+    workouts:'Go big — HIIT, spin, heavy lifting, or a fun group sport while your energy soars.',
+    nutrition:'Antioxidant-rich fruits & veg, fibre, and cruciferous greens to support your natural balance.',
+    productivity:'Schedule the big moments — presentations, interviews, networking, and brave conversations.'
+  },
+  luteal: {
+    emoji:'🌷', name:'Luteal', days:'Days 17–28',
+    essence:'Gently wind down. Finish, nest, and nurture yourself.',
+    energy:'High at first, then easing. Match your pace to how you genuinely feel each day.',
+    mood:'Focused early on, more sensitive later. Be extra tender with yourself as PMS arrives.',
+    workouts:'Moderate — pilates and strength early, softening into yoga and gentle walks.',
+    nutrition:'Complex carbs, magnesium (hello, dark chocolate), B vitamins and calcium. Ease off salt, caffeine & sugar.',
+    productivity:'Tie up loose ends, organise, and do detailed work — then let yourself slow down.'
+  }
+};
+
+const PHASE_ASPECTS = [
+  ['energy','⚡','Energy'],
+  ['mood','🌙','Mood'],
+  ['workouts','🧘‍♀️','Movement'],
+  ['nutrition','🥗','Nutrition'],
+  ['productivity','✨','Productivity']
+];
+
+function loadPhases() {
+  let p = 'menstrual';
+  try { const cp = calculateCurrentPhase(); if (cp && PHASE_GUIDE[cp]) p = cp; } catch(e) {}
+  selectPhase(p);
+}
+
+function selectPhase(name) {
+  const g = PHASE_GUIDE[name];
+  if (!g) return;
+  document.querySelectorAll('#phase-pills .phase-pill').forEach(b =>
+    b.classList.toggle('active', b.dataset.phase === name));
+
+  let isNow = false;
+  try { isNow = (calculateCurrentPhase() === name); } catch(e) {}
+
+  const aspects = PHASE_ASPECTS.map(([key,icon,label]) => `
+        <div class="aspect">
+          <div class="aspect-icon">${icon}</div>
+          <div class="aspect-body">
+            <div class="aspect-label">${label}</div>
+            <div class="aspect-text">${g[key]}</div>
+          </div>
+        </div>`).join('');
+
+  document.getElementById('phase-detail').innerHTML = `
+    <div class="phase-card phase-theme-${name}">
+      <div class="phase-card-head">
+        <span class="phase-card-emoji">${g.emoji}</span>
+        <div class="phase-card-headtext">
+          <h2 class="serif">${g.name}${isNow ? '<span class="phase-now-tag">Happening now</span>' : ''}</h2>
+          <span class="phase-card-days">${g.days}</span>
+        </div>
+      </div>
+      <p class="phase-essence">"${g.essence}"</p>
+      <div class="phase-aspects">${aspects}</div>
+    </div>`;
+}
+
 function predictNextPeriods(count=3) {
   const start = getLastPeriodStart();
   if (!start) return [];
@@ -1403,6 +1610,7 @@ function navigate(screen) {
   if (screen==='calendar') loadCalendar();
   if (screen==='tracker')  loadTracker();
   if (screen==='insights') loadInsights();
+  if (screen==='phases')   loadPhases();
   if (screen==='profile')  loadProfileScreen();
 }
 
