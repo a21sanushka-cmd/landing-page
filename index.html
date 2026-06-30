@@ -224,6 +224,34 @@
 }
 .checkin-reply-text { font-size: 14px; line-height: 1.6; color: var(--text); padding-top: 4px; }
 
+/* ============================================================
+   LITTLE TALKS (Phase 6) + floating moon button
+============================================================ */
+#luna-fab {
+  position: absolute; right: 16px; bottom: 96px; width: 58px; height: 58px;
+  border-radius: 50%; border: none; cursor: pointer; display: none;
+  align-items: center; justify-content: center; font-size: 25px; color: #fff;
+  background: linear-gradient(135deg, var(--phase-accent, var(--primary)), var(--primary-dark));
+  box-shadow: 0 12px 28px var(--phase-glow, rgba(216,167,177,0.5)), inset 0 1px 0 rgba(255,255,255,0.3);
+  z-index: 90; animation: fabFloat 4s ease-in-out infinite;
+}
+#luna-fab:active { transform: scale(0.92); }
+@keyframes fabFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+#screen-little-talks { padding-bottom: 0; }
+#screen-little-talks.active { display: flex !important; flex-direction: column; opacity: 1; transform: none; }
+.talks-header {
+  display: flex; align-items: center; gap: 12px; padding: 18px 18px 12px;
+  border-bottom: 1px solid rgba(216,167,177,0.15);
+  background: rgba(255,252,249,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.talks-back {
+  width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(255,255,255,0.7); box-shadow: var(--shadow-sm); font-size: 20px; color: var(--text);
+  display: flex; align-items: center; justify-content: center;
+}
+.talks-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
 *, *::before, *::after {
   box-sizing: border-box; margin: 0; padding: 0;
   -webkit-tap-highlight-color: transparent;
@@ -1024,6 +1052,16 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
     </div>
   </div>
 
+  <!-- ===== LITTLE TALKS ===== -->
+  <div id="screen-little-talks" class="screen">
+    <div class="talks-header">
+      <button class="talks-back" onclick="navigate('home')">←</button>
+      <div class="talks-title"><span>🌙</span> Little Talks</div>
+    </div>
+    <div class="luna-chat" id="talks-chat"></div>
+    <div class="luna-input-area" id="talks-input"></div>
+  </div>
+
   <!-- ===== CONVERSATIONAL ONBOARDING ===== -->
   <div id="screen-luna-onboard" class="screen">
     <div class="luna-chat" id="luna-chat"></div>
@@ -1083,6 +1121,9 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
       <div id="phase-detail"></div>
     </div>
   </div>
+
+  <!-- ===== FLOATING LUNA BUTTON (Little Talks) ===== -->
+  <button id="luna-fab" onclick="openLittleTalks()" aria-label="Talk to Luna">🌙</button>
 
   <!-- ===== BOTTOM NAV ===== -->
   <nav id="bottom-nav" style="display:none;">
@@ -1834,6 +1875,100 @@ function showCheckinReply(){
 }
 
 // ============================================================
+//  LITTLE TALKS (Phase 6) + Luna's memory
+//  lunaChat() is rule-based now; swap its body for an LLM call
+//  (via a Supabase Edge Function) later without touching the UI.
+// ============================================================
+function lunaContext(){
+  const today = (typeof userLogs !== 'undefined' && userLogs[todayStr()]) || {};
+  let phase = 'follicular'; try { phase = calculateCurrentPhase(); } catch(e) {}
+  return { name: lunaName(), phase, sleep: today.sleep, water: today.water, mood: today.mood, symptoms: today.symptoms || [] };
+}
+
+function lunaChat(msg){
+  const c = lunaContext(); const n = c.name; const m = (msg||'').toLowerCase();
+  const has = (...w) => w.some(x => m.includes(x));
+  if (has('love you','love u','luv u'))                       return `I love you too, ${n}. 🌙 So glad you're here with me.`;
+  if (has('sad','down','cry','upset','depress','unhappy','lonely')) return _lpick([`Oh ${n}… come here. 🤍 Tell me what happened.`, `I'm so sorry, ${n}. You don't have to be okay right now — I'm right here.`]);
+  if (has('anx','stress','overwhelm','worried','panic','nervous')) return _lpick([`Breathe with me, ${n}. In… and slowly out. 🤍 What's weighing on you?`, `That sounds like a lot, ${n}. One thing at a time — I've got you.`]);
+  if (has('tired','exhaust','no energy','sleepy','drained'))  return (c.sleep != null && c.sleep < 6) ? `No wonder, ${n} — only ${c.sleep}h of sleep. Let's get you rested tonight. 😴` : `Rest is allowed, ${n}. Your ${c.phase} phase is asking for a slower pace. 🌙`;
+  if (has('cramp','pain','hurt','ache','headache','sore'))    return _lpick([`Ugh, cramps are the worst. 🤍 Heat, a warm drink, and rest — okay, ${n}?`, `I'm sorry you're hurting, ${n}. Be so gentle with your body today.`]);
+  if (has('crav','hungry','chocolate','snack','sweet'))       return _lpick([`Cravings are so normal in your ${c.phase} phase, ${n} — honour them gently. (Dark chocolate counts 🍫)`, `Feed yourself with love, ${n}. Your body's asking for what it needs.`]);
+  if (has('happy','great','amazing','excited','wonderful','good news')) return _lpick([`Ahh I love this for you, ${n}! 🌸 Tell me everything.`, `Yes, ${n}! Soak it all in. ✨`]);
+  if (has('thank'))                                           return _lpick([`Always, ${n}. 🤍`, `Anytime, love — I'm always here.`]);
+  if (has('how are you','how r u','how you','how are u'))      return `I'm always better when you're here, ${n}. 🌙 But more importantly — how are *you* feeling?`;
+  if (has('water','hydrate','thirsty'))                       return (c.water != null && c.water < 4) ? `You're at ${c.water} glasses today, ${n} — shall we sip a little more? 💧` : `Hydration queen 💧 Keep it up, ${n}.`;
+  if (has('sleep','bed','insomnia','cant sleep',"can't sleep")) return `Let's wind down, ${n}. Dim lights, no screens, maybe some rain sounds. 🌙 You deserve deep rest.`;
+  if (has('period','bleed','flow','spotting'))                return `I'm tracking it right alongside you, ${n}. However your flow shows up, we'll move with it. 🌹`;
+  if (has('bored','nothing to do'))                           return _lpick([`Let's do something soft, ${n} — a stretch, a warm drink, three slow breaths? 🌿`, `Wanna just talk, ${n}? I'm all ears.`]);
+  if (has('hi','hello','hey','heya','yo','hii'))              return `Hi ${n}! 🌙 I'm so happy you popped in. How's your heart today?`;
+  return _lpick([`I hear you, ${n}. 🤍 Tell me more?`, `Mmm, I'm listening, ${n}. What else is on your mind?`, `You can tell me anything, ${n}. We're in your ${c.phase} phase together. 🌙`]);
+}
+
+function lunaTalksOpener(){
+  const c = lunaContext(); const n = c.name;
+  const phaseLine = {
+    menstrual:  `You're in your menstrual phase, so let's be extra soft with yourself today.`,
+    follicular: `Your energy's on the rise in your follicular phase.`,
+    ovulation:  `You're positively glowing in your ovulation phase.`,
+    luteal:     `You're in your luteal phase, winding down gently.`
+  }[c.phase] || '';
+  return `Hi ${n}. 🌙 ${phaseLine} How are you really feeling today?`;
+}
+
+function talksLoad(){ try { return JSON.parse(localStorage.getItem('luna_talks')||'[]'); } catch(e){ return []; } }
+function talksSave(arr){ try { localStorage.setItem('luna_talks', JSON.stringify(arr.slice(-120))); } catch(e){} }
+
+function talkBubble(text, who){
+  const chat = document.getElementById('talks-chat');
+  const msg = document.createElement('div'); msg.className = 'luna-msg ' + (who==='user'?'user':'');
+  if (who !== 'user'){ const av = document.createElement('div'); av.className='luna-avatar'; av.textContent='🌙'; msg.appendChild(av); }
+  const b = document.createElement('div'); b.className='luna-bubble'; b.textContent = text; msg.appendChild(b);
+  chat.appendChild(msg); chat.scrollTop = chat.scrollHeight;
+}
+function talkTyping(show){
+  const chat = document.getElementById('talks-chat');
+  let t = document.getElementById('talk-typing-ind');
+  if (show){ if (t) return; const m=document.createElement('div'); m.className='luna-msg'; m.id='talk-typing-ind';
+    m.innerHTML='<div class="luna-avatar">🌙</div><div class="luna-bubble luna-typing"><span></span><span></span><span></span></div>';
+    chat.appendChild(m); chat.scrollTop = chat.scrollHeight;
+  } else if (t){ t.remove(); }
+}
+
+function openLittleTalks(){ navigate('little-talks'); }
+
+function loadLittleTalks(){
+  const chat = document.getElementById('talks-chat'); chat.innerHTML='';
+  const hist = talksLoad();
+  if (!hist.length){
+    const opener = lunaTalksOpener();
+    talkBubble(opener,'luna');
+    talksSave([{ who:'luna', text:opener }]);
+  } else {
+    hist.forEach(x => talkBubble(x.text, x.who));
+  }
+  renderTalksInput();
+}
+
+function renderTalksInput(){
+  const area = document.getElementById('talks-input');
+  area.innerHTML = '<div class="luna-input-row"><input class="form-input" id="talk-text" placeholder="Tell me anything…" autocomplete="off"><button class="luna-send" id="talk-send">→</button></div>';
+  const send = async () => {
+    const inp = document.getElementById('talk-text'); const v = inp.value.trim(); if (!v) return; inp.value='';
+    talkBubble(v,'user');
+    const hist = talksLoad(); hist.push({ who:'user', text:v });
+    talkTyping(true);
+    await new Promise(r => setTimeout(r, REDUCE_MOTION ? 200 : 850));
+    talkTyping(false);
+    const reply = lunaChat(v);
+    talkBubble(reply,'luna'); hist.push({ who:'luna', text:reply }); talksSave(hist);
+  };
+  document.getElementById('talk-send').onclick = send;
+  document.getElementById('talk-text').addEventListener('keydown', e => { if (e.key==='Enter') send(); });
+  setTimeout(() => { const el=document.getElementById('talk-text'); if (el) el.focus(); }, 120);
+}
+
+// ============================================================
 //  CONVERSATIONAL ONBOARDING (Phase 3)
 // ============================================================
 const OB_FLOW = [
@@ -2088,14 +2223,17 @@ function navigate(screen) {
   const navEl = document.getElementById('nav-'+screen);
   if (navEl) navEl.classList.add('active');
 
-  const noNav = ['splash','welcome','auth','luna-onboard'];
+  const noNav = ['splash','welcome','auth','luna-onboard','little-talks'];
   document.getElementById('bottom-nav').style.display = noNav.includes(screen) ? 'none' : 'flex';
+  const fab = document.getElementById('luna-fab');
+  if (fab) fab.style.display = noNav.includes(screen) ? 'none' : 'flex';
 
   if (screen==='home')     loadHome();
   if (screen==='calendar') loadCalendar();
   if (screen==='tracker')  loadTracker();
   if (screen==='insights') loadInsights();
   if (screen==='phases')   loadPhases();
+  if (screen==='little-talks') loadLittleTalks();
   if (screen==='profile')  loadProfileScreen();
 }
 
