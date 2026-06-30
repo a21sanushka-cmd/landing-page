@@ -293,6 +293,26 @@
 .letter-text { font-family: 'Dancing Script', cursive; font-size: 22px; line-height: 1.65; color: #5e4a50; white-space: pre-line; }
 .letter-close { margin-top: 22px; }
 
+/* ============================================================
+   BEAUTIFUL INSIGHTS (Phase 8)
+============================================================ */
+.viz-card { padding: 18px 18px 14px; margin-bottom: 14px; }
+.viz-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 14px; letter-spacing: 0.3px; }
+.viz-chart { display: flex; align-items: flex-end; gap: 9px; height: 112px; }
+.viz-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; }
+.viz-track { flex: 1; width: 100%; display: flex; align-items: flex-end; background: rgba(216,167,177,0.10); border-radius: 9px; overflow: hidden; }
+.viz-bar-fill { width: 100%; border-radius: 9px 9px 0 0; background: linear-gradient(180deg, var(--phase-accent, var(--primary)), var(--primary-dark)); box-shadow: 0 -2px 8px var(--phase-glow, rgba(216,167,177,0.3)); }
+.viz-bar-fill.water { background: linear-gradient(180deg, #9AD0EE, #5BA3D0); box-shadow: 0 -2px 8px rgba(91,163,208,0.3); }
+.viz-x { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+.mood-breakdown { display: flex; flex-direction: column; gap: 12px; }
+.mood-row { display: flex; align-items: center; gap: 10px; }
+.mood-row-emoji { font-size: 18px; }
+.mood-row-label { font-size: 13px; width: 66px; color: var(--text); }
+.mood-row-track { flex: 1; height: 10px; background: rgba(216,167,177,0.12); border-radius: 6px; overflow: hidden; }
+.mood-row-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--phase-accent, var(--primary)), var(--secondary)); }
+.mood-row-pct { font-size: 11px; color: var(--text-muted); width: 34px; text-align: right; }
+.insights-note { text-align: center; font-size: 13px; color: var(--text-muted); margin: 14px 6px; line-height: 1.6; }
+
 *, *::before, *::after {
   box-sizing: border-box; margin: 0; padding: 0;
   -webkit-tap-highlight-color: transparent;
@@ -1741,7 +1761,11 @@ const PHASE_GUIDE = {
     mood:'Reflective and intuitive. A beautiful time to journal, dream, and gently check in with yourself.',
     workouts:'Soft movement feels best — restorative yoga, light stretching, and slow walks in the fresh air.',
     nutrition:'Warm, iron-rich foods: leafy greens, lentils, beets and soups. Add magnesium and stay cosy and hydrated.',
-    productivity:'Reflect and plan rather than push. Review your month, set soft intentions, and rest without guilt.'
+    productivity:'Reflect and plan rather than push. Review your month, set soft intentions, and rest without guilt.',
+    hormones:'Oestrogen and progesterone are at their lowest — that natural dip is exactly why you may feel quieter.',
+    sleep:'You may need a little extra rest. Cosy up and let yourself sleep in if you can.',
+    selfcare:'Heat packs, warm baths, soft blankets, and zero guilt about cancelling plans. 🤍',
+    symptoms:'Cramps, low energy, tender breasts, and a craving for comfort are all common and normal.'
   },
   follicular: {
     emoji:'🌱', name:'Follicular', days:'Days 6–13',
@@ -1750,7 +1774,11 @@ const PHASE_GUIDE = {
     mood:'Optimistic, curious and creative. Ideas flow easily and the world feels open.',
     workouts:'Build intensity — strength training, cardio, dance, or finally trying that new class.',
     nutrition:'Light and fresh: colourful veggies, lean protein, fermented foods, and flax or pumpkin seeds.',
-    productivity:'Brainstorm, start new projects, and take on the things that felt too hard last week.'
+    productivity:'Brainstorm, start new projects, and take on the things that felt too hard last week.',
+    hormones:'Oestrogen is climbing, lifting your mood, focus, and energy right along with it.',
+    sleep:'Sleep usually comes easily now — you may feel refreshed on a little less.',
+    selfcare:'Channel the spark: tidy a space, make plans, or try something new and playful.',
+    symptoms:'Most people feel clear and light here, and skin often looks its best.'
   },
   ovulation: {
     emoji:'🌸', name:'Ovulation', days:'Days 14–16',
@@ -1759,7 +1787,11 @@ const PHASE_GUIDE = {
     mood:'Warm, social and expressive. Your words land beautifully and connection feels effortless.',
     workouts:'Go big — HIIT, spin, heavy lifting, or a fun group sport while your energy soars.',
     nutrition:'Antioxidant-rich fruits & veg, fibre, and cruciferous greens to support your natural balance.',
-    productivity:'Schedule the big moments — presentations, interviews, networking, and brave conversations.'
+    productivity:'Schedule the big moments — presentations, interviews, networking, and brave conversations.',
+    hormones:'Oestrogen peaks and a little testosterone joins in — hello, confidence and clarity.',
+    sleep:'Energy runs high; keep a gentle wind-down so you still rest deeply.',
+    selfcare:'Say yes to connection — see friends, have the conversation, let yourself be seen.',
+    symptoms:'You might notice a twinge of ovulation, more discharge, and a higher sex drive.'
   },
   luteal: {
     emoji:'🌷', name:'Luteal', days:'Days 17–28',
@@ -1768,16 +1800,24 @@ const PHASE_GUIDE = {
     mood:'Focused early on, more sensitive later. Be extra tender with yourself as PMS arrives.',
     workouts:'Moderate — pilates and strength early, softening into yoga and gentle walks.',
     nutrition:'Complex carbs, magnesium (hello, dark chocolate), B vitamins and calcium. Ease off salt, caffeine & sugar.',
-    productivity:'Tie up loose ends, organise, and do detailed work — then let yourself slow down.'
+    productivity:'Tie up loose ends, organise, and do detailed work — then let yourself slow down.',
+    hormones:'Progesterone rises then falls — that drop near the end is what brings PMS for many.',
+    sleep:'Sleep can get restless later on; magnesium and a cool, dark room really help.',
+    selfcare:'Lower the bar, say no freely, and wrap yourself in comfort as you wind down.',
+    symptoms:'Cravings, bloating, mood shifts, and tender breasts are all very normal here.'
   }
 };
 
 const PHASE_ASPECTS = [
   ['energy','⚡','Energy'],
   ['mood','🌙','Mood'],
+  ['hormones','🧬','Hormones'],
+  ['sleep','😴','Sleep'],
   ['workouts','🧘‍♀️','Movement'],
   ['nutrition','🥗','Nutrition'],
-  ['productivity','✨','Productivity']
+  ['selfcare','🛁','Self-care'],
+  ['productivity','✨','Productivity'],
+  ['symptoms','🩺','Common signs']
 ];
 
 // ============================================================
@@ -2648,20 +2688,52 @@ async function saveTracker() {
 // ============================================================
 //  INSIGHTS
 // ============================================================
+function buildWellnessViz(){
+  const wrap = document.createElement('div');
+  const days = []; for (let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push(d); }
+  if (!Object.keys(userLogs).length){
+    wrap.innerHTML = `<div class="empty-state"><span class="empty-state-icon">📊</span><div class="empty-state-title">Your story starts here</div><p class="empty-state-text">Log a daily check-in and watch your trends bloom into view. 🌸</p></div>`;
+    return wrap;
+  }
+  const col = (d, val, max, water) => {
+    const h = val ? Math.max(6, Math.round(val/max*100)) : 0;
+    return `<div class="viz-col"><div class="viz-track"><div class="viz-bar-fill${water?' water':''}" style="height:${h}%"></div></div><div class="viz-x">${d.toLocaleDateString('en-US',{weekday:'narrow'})}</div></div>`;
+  };
+  const sleepBars = days.map(d => col(d, (userLogs[fmt(d)]||{}).sleep||0, 12, false)).join('');
+  const waterBars = days.map(d => col(d, (userLogs[fmt(d)]||{}).water||0, 8, true)).join('');
+  const counts={}; let total=0;
+  Object.values(userLogs).forEach(l => { if (l.mood){ counts[l.mood]=(counts[l.mood]||0)+1; total++; } });
+  let moodHTML='';
+  if (total){
+    moodHTML = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([mood,c])=>{
+      const mObj=MOODS.find(m=>m.label===mood); const pct=Math.round(c/total*100);
+      return `<div class="mood-row"><span class="mood-row-emoji">${mObj?mObj.emoji:'🌈'}</span><span class="mood-row-label">${mood}</span><div class="mood-row-track"><div class="mood-row-fill" style="width:${pct}%"></div></div><span class="mood-row-pct">${pct}%</span></div>`;
+    }).join('');
+  }
+  wrap.innerHTML = `
+    <div class="card viz-card"><div class="viz-title">😴 Sleep · last 7 days</div><div class="viz-chart">${sleepBars}</div></div>
+    <div class="card viz-card"><div class="viz-title">💧 Water · last 7 days</div><div class="viz-chart">${waterBars}</div></div>
+    ${moodHTML ? `<div class="card viz-card"><div class="viz-title">🌈 How you've been feeling</div><div class="mood-breakdown">${moodHTML}</div></div>` : ''}`;
+  return wrap;
+}
+
 function loadInsights() {
   const container=document.getElementById('insights-content');
   const history  =document.getElementById('history-section');
-  if (userCycles.length<2) {
-    container.innerHTML=`<div class="empty-state"><span class="empty-state-icon">🌱</span><div class="empty-state-title">Your insights are growing</div><p class="empty-state-text">Keep logging — your personalised insights will appear after <strong>2 full cycles</strong>. You've logged <strong>${userCycles.length}</strong> cycle${userCycles.length===1?'':'s'} so far.</p></div>`;
-    history.innerHTML='';
+  container.innerHTML='';
+
+  // Always-available, visual wellness trends (from daily check-ins)
+  container.appendChild(buildWellnessViz());
+
+  const ins=calculateInsights();
+  if (!ins) {
+    const note=document.createElement('p'); note.className='insights-note';
+    note.innerHTML=`🌱 Keep logging, love — your cycle insights bloom after <strong>2 full cycles</strong> (you've logged <strong>${userCycles.length}</strong> so far).`;
+    container.appendChild(note);
     renderHistory(history);
     return;
   }
 
-  const ins=calculateInsights();
-  if (!ins) return;
-
-  container.innerHTML='';
   const grid=document.createElement('div'); grid.className='insight-stat-grid';
   grid.innerHTML=`
     <div class="insight-stat-card"><div class="insight-stat-icon">📅</div><div class="insight-stat-value">${ins.avgCycleLen}</div><div class="insight-stat-label">Average cycle length (days)</div></div>
