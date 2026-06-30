@@ -158,6 +158,72 @@
 .luna-chip span { margin-right:6px; }
 .luna-stepper-row { display:flex; flex-direction:column; gap:12px; }
 
+/* ============================================================
+   LUNA 2.0 — PREMIUM SOFT-3D GLOW-UP (global redesign)
+============================================================ */
+:root { --radius:26px; --radius-sm:16px; --nav-height:104px; }
+
+/* glassmorphic cards floating over the phase atmosphere */
+.card {
+  background: rgba(255,252,249,0.66);
+  backdrop-filter: blur(16px) saturate(1.15); -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: var(--radius);
+  box-shadow: 0 16px 38px rgba(150,115,135,0.13), 0 2px 6px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.7);
+  transition: transform 0.28s cubic-bezier(.2,.8,.2,1), box-shadow 0.28s ease;
+}
+.card:active { transform: scale(0.992); }
+
+/* richer headings */
+.greeting-name { font-size: 34px; letter-spacing: -0.5px; }
+.section-title, .card-title { letter-spacing: -0.2px; }
+
+/* buttons — gradient + soft glow, fully pill */
+.btn { border-radius: var(--radius-pill); font-weight: 600; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  box-shadow: 0 10px 24px rgba(216,167,177,0.45), inset 0 1px 0 rgba(255,255,255,0.35);
+}
+.btn-primary:hover { box-shadow: 0 14px 30px rgba(216,167,177,0.55); transform: translateY(-1px); }
+.btn-secondary {
+  background: rgba(255,255,255,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.7); box-shadow: var(--shadow-sm);
+}
+
+/* floating glass bottom nav */
+#bottom-nav {
+  width: calc(100% - 28px); max-width: calc(var(--max-w) - 28px);
+  height: 66px; bottom: 16px; border-radius: 30px;
+  background: rgba(255,252,249,0.62);
+  backdrop-filter: blur(22px) saturate(1.3); -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  border: 1px solid rgba(255,255,255,0.6);
+  box-shadow: 0 14px 38px rgba(150,115,135,0.20);
+}
+
+/* softer inputs */
+.form-input { border-radius: var(--radius-sm); }
+
+/* tap ripple — soft moonlight */
+.btn, .nav-item, .pill, .mood-btn, .luna-chip, .phase-pill, .glass-btn, .luna-send, .cal-action-btn {
+  position: relative; overflow: hidden;
+}
+.lr-ripple {
+  position: absolute; border-radius: 50%; transform: translate(-50%,-50%) scale(0);
+  background: radial-gradient(circle, rgba(255,255,255,0.7), rgba(216,167,177,0.3) 55%, transparent 72%);
+  pointer-events: none; z-index: 5; animation: lrRipple 0.62s ease-out forwards;
+}
+@keyframes lrRipple { to { transform: translate(-50%,-50%) scale(1); opacity: 0; } }
+
+/* daily check-in — Luna's reply */
+#checkin-reply { margin-top: 16px; }
+.checkin-reply-card {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: linear-gradient(135deg, var(--phase-accent-soft, var(--primary-light)), rgba(255,255,255,0.5));
+  border: 1px solid rgba(255,255,255,0.65); border-radius: 22px 22px 22px 6px;
+  padding: 14px 16px; box-shadow: var(--shadow-sm); animation: fadeSlideIn 0.5s ease;
+}
+.checkin-reply-text { font-size: 14px; line-height: 1.6; color: var(--text); padding-top: 4px; }
+
 *, *::before, *::after {
   box-sizing: border-box; margin: 0; padding: 0;
   -webkit-tap-highlight-color: transparent;
@@ -894,6 +960,7 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
       <div class="save-bar">
         <button class="btn btn-primary btn-full" id="save-tracker-btn" onclick="saveTracker()">Save Today's Log ✓</button>
       </div>
+      <div id="checkin-reply"></div>
     </div>
   </div>
 
@@ -1738,6 +1805,33 @@ function lunaSays(intent, data={}) {
   }
 }
 
+// Daily Check-In — Luna reads the whole check-in and replies like a friend.
+function lunaCheckinReply(s){
+  const n = lunaName();
+  const lines = [];
+  const lowMoods  = ['Sad','Anxious','Irritated','Tired'];
+  const goodMoods = ['Happy','Calm','Loving'];
+  if (lowMoods.includes(s.mood))      lines.push(_lpick([`Oh ${n}… sending you the biggest hug. 🤍`, `I'm right here, ${n}. Whatever today held, you're not carrying it alone.`, `Feeling ${s.mood.toLowerCase()} is completely allowed, ${n}. Be soft with yourself tonight.`]));
+  else if (goodMoods.includes(s.mood)) lines.push(_lpick([`Love seeing you ${s.mood.toLowerCase()}, ${n}! 🌸`, `${s.mood} looks beautiful on you, ${n}. ✨`]));
+  else if (s.mood)                     lines.push(`Thank you for checking in with me, ${n}. 🌙`);
+  if (s.sleep < 5)                                                       lines.push(`Only ${s.sleep}h of sleep though — let's aim for an early, cosy night, okay? 😴`);
+  else if (s.water <= 2)                                                 lines.push(`Maybe a little more water tomorrow? Your body would love that. 💧`);
+  else if ((s.symptoms||[]).some(x=>['Cramps','Back Pain','Headache'].includes(x))) lines.push(`I can see you're in some pain — heat, rest, and something cosy tonight. 🤍`);
+  else if (s.sleep >= 7 && s.water >= 6)                                 lines.push(`And look at you — rested and hydrated. So proud of you. ✨`);
+  if (!lines.length) lines.push(lunaSays('default', { name:n }));
+  return lines.join(' ');
+}
+
+function showCheckinReply(){
+  const host = document.getElementById('checkin-reply'); if (!host) return;
+  host.innerHTML = '';
+  const card = document.createElement('div'); card.className = 'checkin-reply-card';
+  const av = document.createElement('div'); av.className = 'luna-avatar'; av.textContent = '🌙';
+  const tx = document.createElement('div'); tx.className = 'checkin-reply-text'; tx.textContent = lunaCheckinReply(trackerState);
+  card.appendChild(av); card.appendChild(tx); host.appendChild(card);
+  host.scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
 // ============================================================
 //  CONVERSATIONAL ONBOARDING (Phase 3)
 // ============================================================
@@ -2231,6 +2325,7 @@ function loadTracker() {
   trackerState = { symptoms:todayLog.symptoms||[], mood:todayLog.mood||'', notes:todayLog.notes||'', water:todayLog.water||0, sleep:todayLog.sleep||7 };
   renderSymptoms(); renderMoods(); renderWater(); renderSleep();
   document.getElementById('mood-notes').value = trackerState.notes;
+  const cr = document.getElementById('checkin-reply'); if (cr) cr.innerHTML = '';
 }
 
 function renderSymptoms() {
@@ -2288,6 +2383,7 @@ async function saveTracker() {
     btn.textContent='Saved ✓';
     btn.style.background='linear-gradient(135deg,#A8C8A0,#7BAE73)';
     showToast("Today's log saved 💫");
+    showCheckinReply();
     setTimeout(()=>{ btn.textContent="Save Today's Log ✓"; btn.style.background=''; },2000);
   } else {
     btn.textContent="Save Today's Log ✓";
@@ -2415,6 +2511,21 @@ function showToast(msg) {
 // ============================================================
 //  INIT
 // ============================================================
+// Soft moonlight ripple on tap (micro-interaction)
+document.addEventListener('click', function(e){
+  if (REDUCE_MOTION) return;
+  const el = e.target.closest('.btn, .nav-item, .pill, .mood-btn, .luna-chip, .phase-pill, .glass-btn, .luna-send, .cal-action-btn');
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const sp = document.createElement('span'); sp.className = 'lr-ripple';
+  const size = Math.max(rect.width, rect.height) * 1.5;
+  sp.style.width = sp.style.height = size + 'px';
+  sp.style.left = (e.clientX - rect.left) + 'px';
+  sp.style.top  = (e.clientY - rect.top) + 'px';
+  el.appendChild(sp);
+  setTimeout(() => sp.remove(), 660);
+}, true);
+
 document.addEventListener('DOMContentLoaded', () => {
   applyPhaseTheme('follicular'); // gentle default atmosphere before sign-in
   initAuth();
