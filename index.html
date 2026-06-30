@@ -40,6 +40,79 @@
   --max-w:           480px;
 }
 
+/* ============================================================
+   LUNA 2.0 — PHASE THEMING (Phase 1 + 2)
+   The whole app retints + changes atmosphere per cycle phase.
+============================================================ */
+[data-phase="menstrual"] {
+  --phase-accent:#C0556B; --phase-accent-soft:#F6DBE0;
+  --phase-appbg: linear-gradient(170deg,#FBEDE9 0%,#F8E3E5 50%,#F3D7DC 100%);
+  --phase-glow: rgba(192,85,107,0.22); --phase-particle:#C97A86;
+}
+[data-phase="follicular"] {
+  --phase-accent:#4F9D69; --phase-accent-soft:#E1F2E7;
+  --phase-appbg: linear-gradient(170deg,#FBF7E9 0%,#EEF6E7 55%,#E3F0E8 100%);
+  --phase-glow: rgba(79,157,105,0.18); --phase-particle:#86C79B;
+}
+[data-phase="ovulation"] {
+  --phase-accent:#C8973C; --phase-accent-soft:#F7ECCF;
+  --phase-appbg: linear-gradient(170deg,#FFF7E6 0%,#FDEFD7 55%,#FBE6C9 100%);
+  --phase-glow: rgba(200,151,60,0.24); --phase-particle:#E8C06A;
+}
+[data-phase="luteal"] {
+  --phase-accent:#8E74C0; --phase-accent-soft:#EBE4F7;
+  --phase-appbg: linear-gradient(170deg,#F0EAFB 0%,#E8E0F6 55%,#DFD5F0 100%);
+  --phase-glow: rgba(142,116,192,0.24); --phase-particle:#B7A3E0;
+}
+
+/* ambient atmosphere layer (lives inside #app, behind screens) */
+#ambient-motifs { position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.amb-floater {
+  position:absolute; bottom:-8%; opacity:0; will-change:transform,opacity;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,0.10)); animation:ambDrift linear infinite;
+}
+@keyframes ambDrift {
+  0%   { transform:translateY(0) translateX(0) rotate(-8deg); opacity:0; }
+  12%  { opacity:0.55; }
+  88%  { opacity:0.45; }
+  100% { transform:translateY(-118vh) translateX(26px) rotate(12deg); opacity:0; }
+}
+.amb-twinkle {
+  position:absolute; width:6px; height:6px; border-radius:50%;
+  background:var(--phase-particle,#fff); box-shadow:0 0 10px 2px var(--phase-glow);
+  opacity:0; animation:ambTwinkle ease-in-out infinite;
+}
+@keyframes ambTwinkle { 0%,100%{ opacity:0; transform:scale(0.5);} 50%{ opacity:0.95; transform:scale(1.1);} }
+.amb-rain {
+  position:absolute; top:-12%; width:2px; border-radius:2px;
+  background:linear-gradient(180deg, transparent, var(--phase-particle,#C97A86));
+  opacity:0.22; animation:ambRain linear infinite;
+}
+@keyframes ambRain { 0%{ transform:translateY(-20vh);} 100%{ transform:translateY(120vh);} }
+
+/* keep screen content above the ambient layer */
+.screen { z-index:1; }
+
+/* soft-3D lift on cards */
+.card { border:1px solid rgba(255,255,255,0.55); }
+
+/* phase transition moment */
+#phase-transition {
+  position:fixed; inset:0; z-index:400; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; text-align:center; padding:40px;
+  background:var(--phase-appbg, var(--bg));
+  opacity:0; pointer-events:none; transition:opacity 0.7s ease;
+}
+#phase-transition.visible { opacity:1; pointer-events:all; }
+#pt-emoji { font-size:86px; margin-bottom:22px; filter:drop-shadow(0 14px 22px var(--phase-glow)); animation:ptFloat 4s ease-in-out infinite; }
+@keyframes ptFloat { 0%,100%{ transform:translateY(0) rotate(-3deg);} 50%{ transform:translateY(-12px) rotate(3deg);} }
+#pt-line { font-family:'Playfair Display',serif; font-style:italic; font-size:21px; line-height:1.65; color:var(--text); max-width:340px; }
+#pt-sig { margin-top:18px; font-size:12px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--phase-accent,var(--text-muted)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .amb-floater, .amb-twinkle, .amb-rain, #pt-emoji { animation:none !important; }
+}
+
 *, *::before, *::after {
   box-sizing: border-box; margin: 0; padding: 0;
   -webkit-tap-highlight-color: transparent;
@@ -59,8 +132,9 @@ h1,h2,h3,.serif { font-family: 'Playfair Display', serif; }
 #app {
   max-width: var(--max-w); margin: 0 auto;
   min-height: 100vh; position: relative;
-  overflow: hidden; background: var(--bg);
+  overflow: hidden; background: var(--phase-appbg, var(--bg));
   box-shadow: 0 0 60px rgba(0,0,0,0.08);
+  transition: background 0.9s ease;
 }
 
 /* ============================================================
@@ -543,7 +617,8 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
 </style>
 </head>
 <body>
-<div id="app">
+<div id="app" data-phase="follicular">
+  <div id="ambient-motifs" aria-hidden="true"></div>
 
   <!-- ===== SPLASH ===== -->
   <div id="screen-splash" class="screen active">
@@ -901,6 +976,13 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
     <div class="nav-item"        onclick="navigate('profile')"  id="nav-profile">  <span class="nav-icon">👤</span><span class="nav-label">Profile</span></div>
   </nav>
 </div><!-- end #app -->
+
+<!-- ===== PHASE TRANSITION ===== -->
+<div id="phase-transition" data-phase="follicular">
+  <div id="pt-emoji">🌙</div>
+  <div id="pt-line">Welcome to a new phase.</div>
+  <div id="pt-sig">— Luna</div>
+</div>
 
 <!-- ===== ONBOARDING MODAL ===== -->
 <div id="onboarding-modal" class="modal-overlay">
@@ -1481,6 +1563,108 @@ const PHASE_ASPECTS = [
   ['productivity','✨','Productivity']
 ];
 
+// ============================================================
+//  LUNA 2.0 — PHASE THEMING ENGINE  (Phase 1 + 2)
+// ============================================================
+const REDUCE_MOTION = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+const PHASE_THEME = {
+  menstrual:  { floaters:['🕯️','💗','☁️','🌹'], particle:'rain',    count:9  },
+  follicular: { floaters:['🌸','🦋','🌷','🍃'], particle:'twinkle', count:14 },
+  ovulation:  { floaters:['✨','🌼','🦋','💛'], particle:'twinkle', count:16 },
+  luteal:     { floaters:['⭐','🌙','💜','✨'], particle:'twinkle', count:16 }
+};
+
+const LUNA_GREETING = {
+  menstrual:  d => `Day ${d}. Your body is doing quiet, important work — let's take it slow today. 🌹`,
+  follicular: d => `Day ${d}. I can feel your energy rising — what shall we begin? 🌱`,
+  ovulation:  d => `Day ${d}. You're absolutely glowing today. ✨ Go shine.`,
+  luteal:     d => `Day ${d}. Let's be gentle with ourselves now — you're doing beautifully. 🌙`
+};
+
+const LUNA_TRANSITION = {
+  menstrual:  { emoji:'🌹', line:"Your period is here. Let's slow down together — rest is the work now." },
+  follicular: { emoji:'🌱', line:"A fresh chapter begins. Your energy is rising — I can feel it." },
+  ovulation:  { emoji:'✨', line:"You're glowing today. This is your moment to shine, love." },
+  luteal:     { emoji:'🌙', line:"We're easing into your luteal phase. Let's be extra gentle with ourselves." }
+};
+
+function buildAmbient(phase) {
+  const host = document.getElementById('ambient-motifs');
+  if (!host) return;
+  host.innerHTML = '';
+  if (REDUCE_MOTION) return;
+  const cfg = PHASE_THEME[phase] || PHASE_THEME.follicular;
+  for (let i=0; i<8; i++) {
+    const s = document.createElement('span');
+    s.className = 'amb-floater';
+    s.textContent = cfg.floaters[i % cfg.floaters.length];
+    s.style.left = Math.random()*100 + '%';
+    s.style.fontSize = (15 + Math.random()*17) + 'px';
+    s.style.animationDuration = (15 + Math.random()*13) + 's';
+    s.style.animationDelay = (-Math.random()*22) + 's';
+    host.appendChild(s);
+  }
+  if (cfg.particle === 'rain') {
+    for (let i=0; i<cfg.count; i++) {
+      const r = document.createElement('span');
+      r.className = 'amb-rain';
+      r.style.left = Math.random()*100 + '%';
+      r.style.height = (40 + Math.random()*40) + 'px';
+      r.style.animationDuration = (0.8 + Math.random()*0.8) + 's';
+      r.style.animationDelay = (-Math.random()*2) + 's';
+      host.appendChild(r);
+    }
+  } else {
+    for (let i=0; i<cfg.count; i++) {
+      const t = document.createElement('span');
+      t.className = 'amb-twinkle';
+      t.style.left = Math.random()*100 + '%';
+      t.style.top  = Math.random()*100 + '%';
+      t.style.animationDuration = (2 + Math.random()*3) + 's';
+      t.style.animationDelay = (-Math.random()*4) + 's';
+      host.appendChild(t);
+    }
+  }
+}
+
+let lunaCurrentTheme = null;
+function applyPhaseTheme(phase) {
+  if (!PHASE_THEME[phase]) phase = 'follicular';
+  if (phase === lunaCurrentTheme) return;
+  lunaCurrentTheme = phase;
+  const app = document.getElementById('app');
+  if (app) app.setAttribute('data-phase', phase);
+  buildAmbient(phase);
+}
+
+function runPhaseTransition(phase, after) {
+  const t = LUNA_TRANSITION[phase];
+  const overlay = document.getElementById('phase-transition');
+  if (!t || !overlay) { applyPhaseTheme(phase); if (after) after(); return; }
+  document.getElementById('pt-emoji').textContent = t.emoji;
+  document.getElementById('pt-line').textContent  = t.line;
+  overlay.setAttribute('data-phase', phase);
+  applyPhaseTheme(phase);
+  overlay.classList.add('visible');
+  setTimeout(() => { overlay.classList.remove('visible'); if (after) after(); }, REDUCE_MOTION ? 1400 : 3900);
+}
+
+// Apply the right theme for the user's current phase; play a transition
+// the first time we notice the phase has changed since last visit.
+function syncPhaseTheme() {
+  let phase = 'follicular';
+  try { phase = calculateCurrentPhase(); } catch(e) {}
+  let last = null;
+  try { last = localStorage.getItem('luna_last_phase'); } catch(e) {}
+  if (last && last !== phase && lunaCurrentTheme !== phase) {
+    runPhaseTransition(phase);
+  } else {
+    applyPhaseTheme(phase);
+  }
+  try { localStorage.setItem('luna_last_phase', phase); } catch(e) {}
+}
+
 function loadPhases() {
   let p = 'menstrual';
   try { const cp = calculateCurrentPhase(); if (cp && PHASE_GUIDE[cp]) p = cp; } catch(e) {}
@@ -1741,7 +1925,11 @@ function loadHome() {
   document.getElementById('wellness-insight-text').textContent  = pd.insight;
   document.getElementById('daily-affirmation').textContent = '"'+AFFIRMATIONS[new Date().getDate()%AFFIRMATIONS.length]+'"';
   document.getElementById('cycle-wisdom').textContent      = pd.wisdom;
-  document.getElementById('greeting-sub').textContent      = 'You\'re on day '+day+' of your cycle today.';
+  const lunaLine = (LUNA_GREETING[phase] || LUNA_GREETING.follicular)(day);
+  document.getElementById('greeting-sub').textContent      = lunaLine;
+
+  // Luna 2.0 — retint the whole app to the current phase (with a transition on change)
+  syncPhaseTheme();
 }
 
 // ============================================================
@@ -2027,6 +2215,7 @@ function showToast(msg) {
 //  INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
+  applyPhaseTheme('follicular'); // gentle default atmosphere before sign-in
   initAuth();
 });
 </script>
