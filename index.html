@@ -44,25 +44,36 @@
    LUNA 2.0 — PHASE THEMING (Phase 1 + 2)
    The whole app retints + changes atmosphere per cycle phase.
 ============================================================ */
+/* 🩸 Menstrual — Cozy Warm (cream & terracotta) */
 [data-phase="menstrual"] {
-  --phase-accent:#C0556B; --phase-accent-soft:#F6DBE0;
-  --phase-appbg: linear-gradient(170deg,#FBEDE9 0%,#F8E3E5 50%,#F3D7DC 100%);
-  --phase-glow: rgba(192,85,107,0.22); --phase-particle:#C97A86;
+  --bg-card:#FFF7F1;
+  --phase-accent:#C97B63; --phase-accent-soft:#F4E2D7;
+  --phase-appbg: linear-gradient(170deg,#FBEFE6 0%,#F8E6D9 55%,#F2D8C7 100%);
+  --phase-glow: rgba(201,123,99,0.22); --phase-particle:#D79A82;
 }
+/* 🌱 Follicular — fresh green clay (morning, blooming) */
 [data-phase="follicular"] {
-  --phase-accent:#4F9D69; --phase-accent-soft:#E1F2E7;
-  --phase-appbg: linear-gradient(170deg,#FBF7E9 0%,#EEF6E7 55%,#E3F0E8 100%);
-  --phase-glow: rgba(79,157,105,0.18); --phase-particle:#86C79B;
+  --bg-card:#F8FCF5;
+  --phase-accent:#5BA877; --phase-accent-soft:#E4F3E9;
+  --phase-appbg: linear-gradient(170deg,#FBF8E9 0%,#EDF6E5 55%,#DFEFE5 100%);
+  --phase-glow: rgba(91,168,119,0.20); --phase-particle:#8FCBA1;
 }
+/* ☀️ Ovulation — golden clay (bright, radiant) */
 [data-phase="ovulation"] {
-  --phase-accent:#C8973C; --phase-accent-soft:#F7ECCF;
-  --phase-appbg: linear-gradient(170deg,#FFF7E6 0%,#FDEFD7 55%,#FBE6C9 100%);
-  --phase-glow: rgba(200,151,60,0.24); --phase-particle:#E8C06A;
+  --bg-card:#FFFBF0;
+  --phase-accent:#D2992F; --phase-accent-soft:#FBEFD2;
+  --phase-appbg: linear-gradient(170deg,#FFF6E0 0%,#FDEBC8 55%,#FBDFB2 100%);
+  --phase-glow: rgba(210,153,47,0.30); --phase-particle:#F0C765;
 }
+/* 🌙 Luteal — Celestial Dusk (soft moonlit night) */
 [data-phase="luteal"] {
-  --phase-accent:#8E74C0; --phase-accent-soft:#EBE4F7;
-  --phase-appbg: linear-gradient(170deg,#F0EAFB 0%,#E8E0F6 55%,#DFD5F0 100%);
-  --phase-glow: rgba(142,116,192,0.24); --phase-particle:#B7A3E0;
+  --bg:#26204A;
+  --bg-card: rgba(60,51,100,0.62);
+  --text:#F1ECFB; --text-muted:#C8BCEA; --text-light:#9C8FCB;
+  --primary:#B7A3E0; --primary-dark:#9B82C4; --primary-light:#4C4080;
+  --phase-accent:#CBBAF2; --phase-accent-soft:#3C3168;
+  --phase-appbg: linear-gradient(170deg,#241E48 0%,#352B62 50%,#574488 100%);
+  --phase-glow: rgba(160,130,225,0.45); --phase-particle:#DCD2F8;
 }
 
 /* ambient atmosphere layer (lives inside #app, behind screens) */
@@ -814,6 +825,30 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
 .divider { height: 1px; background: rgba(216,167,177,0.15); margin: 20px 0; }
 ::-webkit-scrollbar { width: 0; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+
+/* ============================================================
+   PHASE SURFACES — authoritative (loved-vibe theming per phase)
+============================================================ */
+.card { background: var(--bg-card); transition: background .6s ease, border-color .6s ease, box-shadow .3s ease; }
+#bottom-nav { background: var(--nav-bg, rgba(255,252,249,0.62)); transition: background .6s ease, border-color .6s ease; }
+.ring-card, .affirmation-card, .wisdom-card, .insight-stat-card, .insight-full-card { background: var(--bg-card); }
+
+/* 🌙 Luteal — moonlit dark surfaces */
+[data-phase="luteal"] { --nav-bg: rgba(34,28,68,0.74); }
+[data-phase="luteal"] #bottom-nav { border-color: rgba(255,255,255,0.12); }
+[data-phase="luteal"] .card,
+[data-phase="luteal"] .luna-bubble,
+[data-phase="luteal"] .insight-stat-card,
+[data-phase="luteal"] .insight-full-card { border-color: rgba(255,255,255,0.10); }
+[data-phase="luteal"] .nav-label { color: var(--text-light); }
+[data-phase="luteal"] .form-input { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: var(--text); }
+[data-phase="luteal"] .pill,
+[data-phase="luteal"] .mood-btn,
+[data-phase="luteal"] .glass-btn { background: rgba(255,255,255,0.07); color: var(--text); }
+[data-phase="luteal"] .viz-track,
+[data-phase="luteal"] .mood-row-track { background: rgba(255,255,255,0.10); }
+[data-phase="luteal"] .talks-header { background: rgba(40,33,80,0.5); }
+[data-phase="luteal"] .luna-input-area { background: rgba(40,33,80,0.55); }
 </style>
 </head>
 <body>
@@ -1826,10 +1861,10 @@ const PHASE_ASPECTS = [
 const REDUCE_MOTION = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
 const PHASE_THEME = {
-  menstrual:  { floaters:['🕯️','💗','☁️','🌹'], particle:'rain',    count:9  },
+  menstrual:  { floaters:['🕯️','🍵','🤍','☁️'], particle:'rain',    count:9  },
   follicular: { floaters:['🌸','🦋','🌷','🍃'], particle:'twinkle', count:14 },
-  ovulation:  { floaters:['✨','🌼','🦋','💛'], particle:'twinkle', count:16 },
-  luteal:     { floaters:['⭐','🌙','💜','✨'], particle:'twinkle', count:16 }
+  ovulation:  { floaters:['✨','🌟','🌼','🌻'], particle:'twinkle', count:18 },
+  luteal:     { floaters:['🌙','⭐','✨','💫'], particle:'twinkle', count:20 }
 };
 
 const LUNA_GREETING = {
