@@ -44,6 +44,14 @@
    LUNA 2.0 — PHASE THEMING (Phase 1 + 2)
    The whole app retints + changes atmosphere per cycle phase.
 ============================================================ */
+/* 🌸 Single calm pink theme used everywhere (no per-phase reskin) */
+[data-phase="rose"] {
+  --bg-card:#FFFCFB;
+  --phase-accent:#D6869B; --phase-accent-soft:#F8E3EA;
+  --phase-appbg: linear-gradient(170deg,#FDEFF3 0%,#FBE5ED 55%,#F7D8E3 100%);
+  --phase-glow: rgba(214,134,155,0.22); --phase-particle:#E7A8BD;
+}
+
 /* 🩸 Menstrual — Cozy Warm (cream & terracotta) */
 [data-phase="menstrual"] {
   --bg-card:#FFF7F1;
@@ -852,7 +860,7 @@ textarea.form-input { resize: none; min-height: 88px; line-height: 1.6; }
 </style>
 </head>
 <body>
-<div id="app" data-phase="follicular">
+<div id="app" data-phase="rose">
   <div id="ambient-motifs" aria-hidden="true"></div>
 
   <!-- ===== SPLASH ===== -->
@@ -1864,7 +1872,8 @@ const PHASE_THEME = {
   menstrual:  { floaters:['🕯️','🍵','🤍','☁️'], particle:'rain',    count:9  },
   follicular: { floaters:['🌸','🦋','🌷','🍃'], particle:'twinkle', count:14 },
   ovulation:  { floaters:['✨','🌟','🌼','🌻'], particle:'twinkle', count:18 },
-  luteal:     { floaters:['🌙','⭐','✨','💫'], particle:'twinkle', count:20 }
+  luteal:     { floaters:['🌙','⭐','✨','💫'], particle:'twinkle', count:20 },
+  rose:       { floaters:['🌸','🤍','🌷','💗'], particle:'twinkle', count:14 }
 };
 
 const LUNA_GREETING = {
@@ -1922,12 +1931,12 @@ function buildAmbient(phase) {
 
 let lunaCurrentTheme = null;
 function applyPhaseTheme(phase) {
-  if (!PHASE_THEME[phase]) phase = 'follicular';
-  if (phase === lunaCurrentTheme) return;
-  lunaCurrentTheme = phase;
+  // Luna is one calm pink theme everywhere now — no per-phase reskin.
   const app = document.getElementById('app');
-  if (app) app.setAttribute('data-phase', phase);
-  buildAmbient(phase);
+  if (app) app.setAttribute('data-phase', 'rose');
+  if (lunaCurrentTheme === 'rose') return;
+  lunaCurrentTheme = 'rose';
+  buildAmbient('rose');
 }
 
 function runPhaseTransition(phase, after) {
@@ -1945,16 +1954,8 @@ function runPhaseTransition(phase, after) {
 // Apply the right theme for the user's current phase; play a transition
 // the first time we notice the phase has changed since last visit.
 function syncPhaseTheme() {
-  let phase = 'follicular';
-  try { phase = calculateCurrentPhase(); } catch(e) {}
-  let last = null;
-  try { last = localStorage.getItem('luna_last_phase'); } catch(e) {}
-  if (last && last !== phase && lunaCurrentTheme !== phase) {
-    runPhaseTransition(phase);
-  } else {
-    applyPhaseTheme(phase);
-  }
-  try { localStorage.setItem('luna_last_phase', phase); } catch(e) {}
+  // One consistent pink theme — no phase transitions or reskinning.
+  applyPhaseTheme('rose');
 }
 
 // ============================================================
