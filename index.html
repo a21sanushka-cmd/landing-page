@@ -1983,7 +1983,20 @@ function lunaContext(){
   return { name: lunaName(), phase, sleep: today.sleep, water: today.water, mood: today.mood, symptoms: today.symptoms || [] };
 }
 
-function lunaChat(msg){
+// Real AI conversation via the secure Supabase Edge Function (falls back to rules if unavailable).
+async function lunaChatAI(message){
+  try {
+    if (sb && sb.functions) {
+      const { data, error } = await sb.functions.invoke('luna-chat', {
+        body: { message, history: talksLoad().slice(-12), context: lunaContext() }
+      });
+      if (!error && data && data.reply) return data.reply;
+    }
+  } catch(e) { /* fall through to rule-based */ }
+  return lunaChatRules(message);
+}
+
+function lunaChatRules(msg){
   const c = lunaContext(); const n = c.name; const m = (msg||'').toLowerCase();
   const has = (...w) => w.some(x => m.includes(x));
   if (has('love you','love u','luv u'))                       return `I love you too, ${n}. 🌙 So glad you're here with me.`;
@@ -2056,9 +2069,8 @@ function renderTalksInput(){
     talkBubble(v,'user');
     const hist = talksLoad(); hist.push({ who:'user', text:v });
     talkTyping(true);
-    await new Promise(r => setTimeout(r, REDUCE_MOTION ? 200 : 850));
+    const reply = await lunaChatAI(v);
     talkTyping(false);
-    const reply = lunaChat(v);
     talkBubble(reply,'luna'); hist.push({ who:'luna', text:reply }); talksSave(hist);
   };
   document.getElementById('talk-send').onclick = send;
