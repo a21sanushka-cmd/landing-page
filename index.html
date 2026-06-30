@@ -1790,7 +1790,8 @@ function syncPhaseTheme() {
 // ============================================================
 function lunaProfileGet(){ try { return JSON.parse(localStorage.getItem('luna_profile')||'{}'); } catch(e){ return {}; } }
 function lunaProfileSet(obj){ try { localStorage.setItem('luna_profile', JSON.stringify({ ...lunaProfileGet(), ...obj })); } catch(e){} }
-function lunaName(){ return lunaProfileGet().nickname || (userProfile && userProfile.name) || 'love'; }
+function lunaName(){ const p=lunaProfileGet(); return p.nickname || p.name || (userProfile && userProfile.name) || 'love'; }
+function lunaDisplayName(){ const p=lunaProfileGet(); return (userProfile && userProfile.name) || p.nickname || p.name || (currentUser && currentUser.email ? currentUser.email.split('@')[0] : 'Welcome'); }
 const _lpick = a => a[Math.floor(Math.random()*a.length)];
 
 function lunaSays(intent, data={}) {
@@ -2193,7 +2194,7 @@ function loadHome() {
   if (!userProfile) return;
   const hour = new Date().getHours();
   document.getElementById('greeting-time').textContent = hour<12?'Good Morning':hour<17?'Good Afternoon':'Good Evening';
-  document.getElementById('greeting-name').textContent = (userProfile.name || currentUser?.email?.split('@')[0] || 'Welcome');
+  document.getElementById('greeting-name').textContent = lunaDisplayName();
 
   const { day, total } = calculateCycleDay();
   document.getElementById('ring-day').textContent   = 'Day '+day;
